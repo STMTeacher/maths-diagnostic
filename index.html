@@ -2,82 +2,108 @@
 <html>
 <head>
 
-<title>GCSE Maths Survival Test</title>
+<title>GCSE Maths Diagnostic</title>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 
 body{
-font-family:Arial;
-background:#f2f2f2;
 margin:0;
-padding:20px;
+font-family:Arial, Helvetica, sans-serif;
+background:linear-gradient(135deg,#0f3d0f,#c8a400);
+min-height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
 }
 
 .container{
-max-width:700px;
-margin:auto;
-background:white;
-padding:25px;
-border-radius:10px;
-box-shadow:0 0 10px rgba(0,0,0,0.1);
+
+background:black;
+color:white;
+max-width:750px;
+width:92%;
+padding:30px;
+border-radius:12px;
+box-shadow:0 0 20px rgba(0,0,0,0.6);
 }
 
-h2{
+h1{
 text-align:center;
+margin-top:0;
 }
 
 .progress{
-background:#ddd;
-height:18px;
-border-radius:10px;
+height:16px;
+background:#333;
+border-radius:8px;
 margin-bottom:20px;
+overflow:hidden;
 }
 
 .bar{
-background:#4CAF50;
-height:18px;
+height:16px;
+background:linear-gradient(90deg,#00c853,#ffd700);
 width:0%;
-border-radius:10px;
+}
+
+.question{
+font-size:20px;
+margin-bottom:15px;
 }
 
 .option{
+
+background:#1f1f1f;
 padding:12px;
-margin:8px 0;
-background:#f7f7f7;
 border-radius:6px;
+margin:8px 0;
 cursor:pointer;
+border:1px solid #333;
 }
 
 .option:hover{
-background:#e6e6e6;
+
+background:#2a2a2a;
+
 }
 
 .feedback{
-font-weight:bold;
+
 margin-top:10px;
+font-weight:bold;
 }
 
 button{
-padding:10px 20px;
-margin-top:15px;
+
+margin-top:20px;
+padding:12px 20px;
 font-size:16px;
+border:none;
+border-radius:6px;
+background:#ffd700;
+color:black;
+cursor:pointer;
+}
+
+button:hover{
+
+background:#ffea57;
+
 }
 
 .result{
-margin-top:20px;
+
+margin-top:25px;
 font-size:18px;
+
 }
 
 @media(max-width:600px){
 
-.container{
-padding:18px;
-}
-
-.option{
-font-size:16px;
+.question{
+font-size:18px;
 }
 
 }
@@ -90,19 +116,19 @@ font-size:16px;
 
 <div class="container">
 
-<h2>GCSE Maths Survival Test</h2>
+<h1>GCSE Maths Survival Test</h1>
 
 <div class="progress">
 <div id="bar" class="bar"></div>
 </div>
 
-<div id="question"></div>
+<div id="question" class="question"></div>
 
 <div id="options"></div>
 
 <div id="feedback" class="feedback"></div>
 
-<button onclick="nextQuestion()">Next</button>
+<button onclick="next()">Next</button>
 
 <div id="result" class="result"></div>
 
@@ -114,19 +140,36 @@ const questions=[
 
 {q:"How many minutes are in 1 hour?",o:["60","100","30","24"],a:0,topic:"Measurement"},
 {q:"Convert 300 cm into metres",o:["0.3","3","30","300"],a:1,topic:"Measurement"},
+{q:"Convert 2 kg into grams",o:["200","2000","20","20000"],a:1,topic:"Measurement"},
+
 {q:"Find 10% of 80",o:["8","80","0.8","16"],a:0,topic:"Percentages"},
 {q:"Convert 0.35 to a percentage",o:["3.5%","35%","350%","0.35%"],a:1,topic:"Percentages"},
+{q:"Find 10% of 250",o:["25","2.5","250","0.25"],a:0,topic:"Percentages"},
+
 {q:"What is 1/5 as a decimal?",o:["0.1","0.2","0.25","0.5"],a:1,topic:"FDP"},
+{q:"0.75 written as percentage",o:["7.5%","75%","750%","0.75%"],a:1,topic:"FDP"},
+{q:"1/4 as decimal",o:["0.25","0.2","0.4","0.5"],a:0,topic:"FDP"},
+
 {q:"Angles in a triangle add up to",o:["90","180","360","270"],a:1,topic:"Angles"},
 {q:"Angles around a point equal",o:["90","180","360","270"],a:2,topic:"Angles"},
-{q:"Which number is prime?",o:["9","11","15","21"],a:1,topic:"Prime"},
-{q:"Round 4.376 to 2 decimal places",o:["4.38","4.37","4.36","4.4"],a:0,topic:"Rounding"},
-{q:"Round 3486 to 2 significant figures",o:["3500","3400","3480","3490"],a:0,topic:"Rounding"},
-{q:"Coordinate when x=4 y=2",o:["(4,2)","(2,4)","(4,4)","(2,2)"],a:0,topic:"Coordinates"},
-{q:"Symbol meaning greater than",o:["<",">","≤","≥"],a:1,topic:"Inequalities"},
+{q:"Angles on straight line equal",o:["90","180","360","270"],a:1,topic:"Angles"},
 {q:"Corresponding angles are",o:["Equal","180","90","Random"],a:0,topic:"Angles"},
 {q:"Co-interior angles",o:["Equal","Add to 180","Add to 90","Random"],a:1,topic:"Angles"},
-{q:"Work out (8+6)×5",o:["70","40","14","30"],a:0,topic:"Calculator"}
+
+{q:"Which number is prime?",o:["9","11","15","21"],a:1,topic:"Prime"},
+{q:"Prime factors of 12 include",o:["2 and 3","4 and 3","6 and 2","12"],a:0,topic:"Prime"},
+
+{q:"Round 4.376 to 2 decimal places",o:["4.38","4.37","4.36","4.4"],a:0,topic:"Rounding"},
+{q:"Round 3486 to 2 significant figures",o:["3500","3400","3480","3490"],a:0,topic:"Rounding"},
+
+{q:"Coordinate when x=4 y=2",o:["(4,2)","(2,4)","(4,4)","(2,2)"],a:0,topic:"Coordinates"},
+{q:"In coordinate (x,y), which comes first?",o:["x","y","z","angle"],a:0,topic:"Coordinates"},
+
+{q:"Symbol meaning greater than",o:["<",">","≤","≥"],a:1,topic:"Inequalities"},
+{q:"Symbol meaning less than",o:["<","≤",">","≥"],a:0,topic:"Inequalities"},
+
+{q:"Work out (8+6)×5",o:["70","40","14","30"],a:0,topic:"Calculator"},
+{q:"Work out 12÷3+4",o:["8","6","4","10"],a:0,topic:"Calculator"}
 
 ]
 
@@ -140,7 +183,7 @@ function load(){
 
 const q=questions[index]
 
-document.getElementById("question").innerHTML="<h3>"+q.q+"</h3>"
+document.getElementById("question").innerHTML=q.q
 
 let html=""
 
@@ -183,7 +226,7 @@ document.getElementById("feedback").innerHTML="❌ Incorrect"
 
 }
 
-function nextQuestion(){
+function next(){
 
 if(selected===null) return
 
@@ -204,7 +247,6 @@ finish()
 function updateBar(){
 
 let percent=(index/questions.length)*100
-
 document.getElementById("bar").style.width=percent+"%"
 
 }
@@ -239,7 +281,7 @@ html+=w+"<br>"
 
 }else{
 
-html+="<h3>Great work! No major gaps detected.</h3>"
+html+="<h3>No major gaps detected</h3>"
 
 }
 
