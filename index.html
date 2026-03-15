@@ -2,53 +2,57 @@
 <html>
 <head>
 
-<title>GCSE Maths Survival Test</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GCSE Maths Diagnostic</title>
 
 <style>
 
 body{
 margin:0;
 font-family:Arial;
-background:linear-gradient(135deg,#0f3d0f,#c8a400);
-min-height:100vh;
+background:linear-gradient(135deg,#063d1e,#c8a200);
 display:flex;
-align-items:center;
 justify-content:center;
+align-items:center;
+min-height:100vh;
 }
 
 .container{
 background:black;
 color:white;
-max-width:750px;
 width:92%;
+max-width:900px;
 padding:30px;
 border-radius:12px;
-box-shadow:0 0 20px rgba(0,0,0,0.6);
+box-shadow:0 0 25px rgba(0,0,0,0.7);
 }
 
-h1{
+h1,h2,h3{
 text-align:center;
-margin-top:0;
+}
+
+button{
+padding:12px 20px;
+margin:8px;
+font-size:16px;
+border:none;
+border-radius:6px;
+background:#ffd700;
+cursor:pointer;
 }
 
 .progress{
 height:16px;
 background:#333;
 border-radius:8px;
-margin-bottom:20px;
+margin-bottom:25px;
 overflow:hidden;
 }
 
 .bar{
-height:16px;
-background:linear-gradient(90deg,#00c853,#ffd700);
+height:100%;
 width:0%;
-}
-
-.question{
-font-size:20px;
-margin-bottom:15px;
+background:linear-gradient(90deg,#00c853,#ffd700);
 }
 
 .option{
@@ -72,20 +76,22 @@ background:#2e7d32;
 background:#c62828;
 }
 
-button{
-margin-top:20px;
-padding:12px 20px;
-font-size:16px;
-border:none;
+.topicBar{
+height:12px;
+background:#333;
 border-radius:6px;
-background:#ffd700;
-color:black;
-cursor:pointer;
+margin-bottom:16px;
 }
 
-.result{
-margin-top:25px;
-font-size:18px;
+.topicFill{
+height:12px;
+background:#ffd700;
+}
+
+.topicButton{
+display:block;
+width:100%;
+margin:6px 0;
 }
 
 </style>
@@ -96,94 +102,184 @@ font-size:18px;
 
 <div class="container">
 
-<h1>GCSE Maths Survival Test</h1>
-
-<div class="progress">
-<div id="bar" class="bar"></div>
-</div>
-
-<div id="question" class="question"></div>
-
-<div id="options"></div>
-
-<div id="feedback"></div>
-
-<div id="result" class="result"></div>
+<div id="app"></div>
 
 </div>
 
 <script>
 
-const questions=[
+/* ---------------- QUESTION BANK ---------------- */
 
-{q:"How many minutes are in 1 hour?",o:["60","100","30","24"],a:0,topic:"Measurement"},
-{q:"Convert 300 cm into metres",o:["0.3","3","30","300"],a:1,topic:"Measurement"},
-{q:"Find 10% of 80",o:["8","80","0.8","16"],a:0,topic:"Percentages"},
-{q:"Convert 0.35 to a percentage",o:["3.5%","35%","350%","0.35%"],a:1,topic:"Percentages"},
-{q:"What is 1/5 as a decimal?",o:["0.1","0.2","0.25","0.5"],a:1,topic:"FDP"},
-{q:"Angles in a triangle add up to",o:["90","180","360","270"],a:1,topic:"Angles"},
-{q:"Angles around a point equal",o:["90","180","360","270"],a:2,topic:"Angles"},
-{q:"Which number is prime?",o:["9","11","15","21"],a:1,topic:"Prime"},
-{q:"Round 4.376 to 2 decimal places",o:["4.38","4.37","4.36","4.4"],a:0,topic:"Rounding"},
-{q:"Coordinate when x=4 y=2",o:["(4,2)","(2,4)","(4,4)","(2,2)"],a:0,topic:"Coordinates"}
+const questionBank=[
+
+{q:"How many minutes are in one hour?",o:["60","100","30","24"],a:0,t:"Measurement"},
+{q:"How many centimetres are in one metre?",o:["10","100","1000","10000"],a:1,t:"Measurement"},
+{q:"300 centimetres equals how many metres?",o:["0.3","3","30","300"],a:1,t:"Measurement"},
+{q:"How many grams are in one kilogram?",o:["100","1000","10","10000"],a:1,t:"Measurement"},
+
+{q:"Which number is largest?",o:["0.56","0.65","0.605","0.6"],a:1,t:"Decimals"},
+{q:"7.5 ÷ 5 equals",o:["0.75","1.5","2.5","15"],a:1,t:"Decimals"},
+{q:"4.2 × 3 equals",o:["12.6","7.2","42","1.26"],a:0,t:"Decimals"},
+
+{q:"10% of 80 equals",o:["8","80","0.8","16"],a:0,t:"Percentages"},
+{q:"10% of 250 equals",o:["25","2.5","250","0.25"],a:0,t:"Percentages"},
+{q:"0.45 written as a percentage",o:["4.5%","45%","450%","0.45%"],a:1,t:"Percentages"},
+
+{q:"1/4 written as a decimal",o:["0.2","0.25","0.4","0.5"],a:1,t:"FDP"},
+{q:"1/5 written as a decimal",o:["0.1","0.2","0.25","0.5"],a:1,t:"FDP"},
+{q:"75% written as a decimal",o:["0.75","7.5","0.075","75"],a:0,t:"FDP"},
+
+{q:"Angles in a triangle add up to",o:["90","180","360","270"],a:1,t:"Angles"},
+{q:"Angles around a point add up to",o:["180","90","360","270"],a:2,t:"Angles"},
+{q:"Angles on a straight line add up to",o:["90","180","360","270"],a:1,t:"Angles"},
+{q:"Corresponding angles are",o:["Equal","180","90","Random"],a:0,t:"Angles"},
+{q:"Co-interior angles",o:["Equal","Add to 180","Add to 90","Random"],a:1,t:"Angles"},
+
+{q:"Which number is prime?",o:["9","11","15","21"],a:1,t:"Prime Factors"},
+{q:"Prime factors of 12 include",o:["2 and 3","4 and 3","6 and 2","12"],a:0,t:"Prime Factors"},
+
+{q:"Round 4.376 to 2 decimal places",o:["4.38","4.37","4.36","4.4"],a:0,t:"Rounding"},
+{q:"Round 3486 to 2 significant figures",o:["3500","3400","3480","3490"],a:0,t:"Rounding"},
+
+{q:"Which axis runs horizontally?",o:["X","Y","Z","Angle"],a:0,t:"Coordinates"},
+{q:"Which axis runs vertically?",o:["X","Y","Z","Angle"],a:1,t:"Coordinates"},
+{q:"Which coordinate comes first?",o:["X","Y","Z","Angle"],a:0,t:"Coordinates"},
+
+{q:"Which symbol means greater than?",o:["<",">","≤","≥"],a:1,t:"Inequalities"},
+{q:"Which symbol means less than?",o:["<","≤",">","≥"],a:0,t:"Inequalities"}
 
 ]
 
+/* --------------- GLOBAL VARIABLES --------------- */
+
+let questions=[]
 let index=0
 let score=0
-let topics={}
 let locked=false
+let topics={}
 
-function load(){
+/* --------------- START SCREEN ---------------- */
 
-locked=false
+function startScreen(){
 
-const q=questions[index]
+document.getElementById("app").innerHTML=`
 
-document.getElementById("question").innerHTML=q.q
+<h1>GCSE Maths Diagnostic</h1>
 
-let html=""
+<h3>Choose a Mode</h3>
 
-q.o.forEach((opt,i)=>{
+<button onclick="startDiagnostic()">Full Diagnostic</button>
 
-html+=`<div class="option" id="opt${i}" onclick="selectAnswer(${i})">${opt}</div>`
+<button onclick="topicMenu()">Practice a Topic</button>
 
-})
-
-document.getElementById("options").innerHTML=html
-
-updateBar()
+`
 
 }
 
-function selectAnswer(i){
+/* --------------- DIAGNOSTIC MODE ---------------- */
+
+function startDiagnostic(){
+
+questions=shuffle([...questionBank]).slice(0,20)
+
+startQuiz()
+
+}
+
+/* --------------- TOPIC MODE ---------------- */
+
+function topicMenu(){
+
+let topics=[...new Set(questionBank.map(q=>q.t))]
+
+let html="<h2>Select a Topic</h2>"
+
+topics.forEach(t=>{
+html+=`<button class="topicButton" onclick="startTopic('${t}')">${t}</button>`
+})
+
+html+=`<br><button onclick="startScreen()">Back</button>`
+
+document.getElementById("app").innerHTML=html
+
+}
+
+function startTopic(topic){
+
+let topicQuestions=questionBank.filter(q=>q.t===topic)
+
+questions=shuffle(topicQuestions).slice(0,10)
+
+startQuiz()
+
+}
+
+/* --------------- QUIZ ENGINE ---------------- */
+
+function startQuiz(){
+
+index=0
+score=0
+locked=false
+topics={}
+
+loadQuestion()
+
+}
+
+function loadQuestion(){
+
+let q=questions[index]
+
+let html=`
+
+<div class="progress">
+<div class="bar" style="width:${(index/questions.length)*100}%"></div>
+</div>
+
+<h3>${q.q}</h3>
+
+`
+
+q.o.forEach((opt,i)=>{
+
+html+=`<div class="option" onclick="answer(${i})" id="opt${i}">${opt}</div>`
+
+})
+
+html+=`<div id="feedback"></div>`
+
+document.getElementById("app").innerHTML=html
+
+}
+
+function answer(choice){
 
 if(locked) return
-
 locked=true
 
-const q=questions[index]
+let q=questions[index]
 
-if(!topics[q.topic]) topics[q.topic]={correct:0,total:0}
+if(!topics[q.t]) topics[q.t]={correct:0,total:0}
 
-topics[q.topic].total++
+topics[q.t].total++
 
-if(i===q.a){
+if(choice===q.a){
 
 score++
-topics[q.topic].correct++
+topics[q.t].correct++
 
-document.getElementById("opt"+i).classList.add("correct")
+document.getElementById("opt"+choice).classList.add("correct")
 
-document.getElementById("feedback").innerHTML="✅ Correct"
+document.getElementById("feedback").innerHTML="Correct"
 
 }else{
 
-document.getElementById("opt"+i).classList.add("wrong")
+document.getElementById("opt"+choice).classList.add("wrong")
 
 document.getElementById("opt"+q.a).classList.add("correct")
 
-document.getElementById("feedback").innerHTML="❌ Incorrect"
+document.getElementById("feedback").innerHTML="Incorrect"
 
 }
 
@@ -194,11 +290,11 @@ setTimeout(nextQuestion,3000)
 function nextQuestion(){
 
 index++
+locked=false
 
 if(index<questions.length){
 
-document.getElementById("feedback").innerHTML=""
-load()
+loadQuestion()
 
 }else{
 
@@ -208,21 +304,15 @@ finish()
 
 }
 
-function updateBar(){
-
-let percent=(index/questions.length)*100
-
-document.getElementById("bar").style.width=percent+"%"
-
-}
+/* --------------- RESULT SCREEN ---------------- */
 
 function finish(){
 
-let percent=Math.round((score/questions.length)*100)
+let percent=Math.round(score/questions.length*100)
 
-let html="<h2>Your Score: "+percent+"%</h2>"
+let html=`<h2>Your Score: ${percent}%</h2>`
 
-html+="<h3>Topic Analysis</h3>"
+html+="<h3>Topic Mastery</h3>"
 
 let weak=[]
 
@@ -230,7 +320,9 @@ for(let t in topics){
 
 let p=Math.round((topics[t].correct/topics[t].total)*100)
 
-html+=t+": "+p+"%<br>"
+html+=`${t} ${p}%`
+
+html+=`<div class="topicBar"><div class="topicFill" style="width:${p}%"></div></div>`
 
 if(p<60) weak.push(t)
 
@@ -238,7 +330,7 @@ if(p<60) weak.push(t)
 
 if(weak.length>0){
 
-html+="<h3>Recommended Revision</h3>"
+html+="<h3>Priority Revision</h3>"
 
 weak.forEach(w=>{
 html+=w+"<br>"
@@ -246,14 +338,29 @@ html+=w+"<br>"
 
 }
 
-document.getElementById("question").innerHTML=""
-document.getElementById("options").innerHTML=""
-document.getElementById("feedback").innerHTML=""
-document.getElementById("result").innerHTML=html
+html+=`
+
+<br>
+
+<button onclick="startScreen()">Home</button>
+
+<button onclick="startDiagnostic()">Run Diagnostic Again</button>
+
+`
+
+document.getElementById("app").innerHTML=html
 
 }
 
-load()
+/* --------------- HELPERS ---------------- */
+
+function shuffle(arr){
+
+return arr.sort(()=>Math.random()-0.5)
+
+}
+
+startScreen()
 
 </script>
 
