@@ -1,368 +1,900 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GCSE Maths Diagnostic</title>
+  <style>
+    :root{
+      --bg1:#052a16;
+      --bg2:#a88400;
+      --card:#0d0d0d;
+      --card2:#171717;
+      --text:#f5f5f5;
+      --muted:#c9c9c9;
+      --gold:#ffd700;
+      --gold2:#c9a227;
+      --green:#22c55e;
+      --red:#dc2626;
+      --line:#2a2a2a;
+    }
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GCSE Maths Diagnostic</title>
+    *{box-sizing:border-box}
 
-<style>
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      color:var(--text);
+      background:linear-gradient(135deg,var(--bg1),var(--bg2));
+      min-height:100vh;
+      padding:20px;
+    }
 
-body{
-margin:0;
-font-family:Arial;
-background:linear-gradient(135deg,#063d1e,#c8a200);
-display:flex;
-justify-content:center;
-align-items:center;
-min-height:100vh;
-}
+    .shell{
+      max-width:980px;
+      margin:0 auto;
+    }
 
-.container{
-background:black;
-color:white;
-width:92%;
-max-width:900px;
-padding:30px;
-border-radius:12px;
-box-shadow:0 0 25px rgba(0,0,0,0.7);
-}
+    .frame{
+      background:rgba(0,0,0,.88);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:18px;
+      box-shadow:0 20px 40px rgba(0,0,0,.35);
+      overflow:hidden;
+    }
 
-h1,h2,h3{
-text-align:center;
-}
+    .topbar{
+      padding:18px 22px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(90deg, rgba(255,215,0,.08), rgba(34,197,94,.08));
+    }
 
-button{
-padding:12px 20px;
-margin:8px;
-font-size:16px;
-border:none;
-border-radius:6px;
-background:#ffd700;
-cursor:pointer;
-}
+    .brand{
+      margin:0;
+      font-size:clamp(1.5rem, 2.3vw, 2.2rem);
+      text-align:center;
+      letter-spacing:.3px;
+    }
 
-.progress{
-height:16px;
-background:#333;
-border-radius:8px;
-margin-bottom:25px;
-overflow:hidden;
-}
+    .subtitle{
+      margin:8px 0 0;
+      text-align:center;
+      color:var(--muted);
+      font-size:.98rem;
+    }
 
-.bar{
-height:100%;
-width:0%;
-background:linear-gradient(90deg,#00c853,#ffd700);
-}
+    .content{
+      padding:22px;
+    }
 
-.option{
-background:#1f1f1f;
-padding:12px;
-border-radius:6px;
-margin:8px 0;
-cursor:pointer;
-border:1px solid #333;
-}
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:14px;
+    }
 
-.option:hover{
-background:#2a2a2a;
-}
+    .panel{
+      background:var(--card2);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:18px;
+    }
 
-.correct{
-background:#2e7d32;
-}
+    .panel h3{
+      margin:0 0 10px;
+      font-size:1.05rem;
+    }
 
-.wrong{
-background:#c62828;
-}
+    .panel p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.45;
+      font-size:.95rem;
+    }
 
-.topicBar{
-height:12px;
-background:#333;
-border-radius:6px;
-margin-bottom:16px;
-}
+    .big-btn, .small-btn, .topic-btn{
+      border:none;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:700;
+      transition:.18s ease;
+    }
 
-.topicFill{
-height:12px;
-background:#ffd700;
-}
+    .big-btn{
+      width:100%;
+      padding:14px 16px;
+      margin-top:14px;
+      background:linear-gradient(90deg,var(--green),var(--gold));
+      color:#000;
+      font-size:1rem;
+    }
 
-.topicButton{
-display:block;
-width:100%;
-margin:6px 0;
-}
+    .big-btn:hover,
+    .small-btn:hover,
+    .topic-btn:hover{
+      transform:translateY(-1px);
+      filter:brightness(1.04);
+    }
 
-</style>
+    .small-btn{
+      padding:11px 14px;
+      background:var(--gold);
+      color:#000;
+      font-size:.95rem;
+      margin:6px 8px 0 0;
+    }
 
+    .ghost-btn{
+      background:#222;
+      color:#fff;
+      border:1px solid #333;
+    }
+
+    .danger-btn{
+      background:#7f1d1d;
+      color:#fff;
+    }
+
+    .topic-btn{
+      width:100%;
+      text-align:left;
+      padding:14px 14px;
+      margin:8px 0;
+      background:#181818;
+      color:#fff;
+      border:1px solid #2c2c2c;
+      font-size:.98rem;
+    }
+
+    .stat-row{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+      gap:12px;
+      margin:14px 0 18px;
+    }
+
+    .stat{
+      background:#151515;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:16px;
+      text-align:center;
+    }
+
+    .stat .num{
+      font-size:1.5rem;
+      font-weight:700;
+      color:var(--gold);
+    }
+
+    .stat .label{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:.92rem;
+    }
+
+    .progress-wrap{
+      margin:8px 0 18px;
+    }
+
+    .progress-meta{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      font-size:.94rem;
+      color:var(--muted);
+      margin-bottom:8px;
+    }
+
+    .progress{
+      height:16px;
+      background:#2a2a2a;
+      border-radius:999px;
+      overflow:hidden;
+    }
+
+    .bar{
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg,var(--green),var(--gold));
+      transition:width .25s ease;
+    }
+
+    .question-card{
+      background:#111;
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:20px;
+    }
+
+    .q-topic{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,215,0,.12);
+      color:#ffe88a;
+      font-size:.82rem;
+      margin-bottom:12px;
+      border:1px solid rgba(255,215,0,.18);
+    }
+
+    .question{
+      font-size:1.28rem;
+      line-height:1.4;
+      margin:0 0 16px;
+    }
+
+    .option{
+      background:#1a1a1a;
+      border:1px solid #2f2f2f;
+      border-radius:14px;
+      padding:14px 14px;
+      margin:10px 0;
+      cursor:pointer;
+      transition:.18s ease;
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .option:hover{
+      background:#222;
+    }
+
+    .option-letter{
+      width:32px;
+      height:32px;
+      border-radius:50%;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      background:#2a2a2a;
+      font-weight:700;
+      flex:0 0 32px;
+    }
+
+    .option.correct{
+      background:rgba(34,197,94,.18);
+      border-color:rgba(34,197,94,.6);
+    }
+
+    .option.wrong{
+      background:rgba(220,38,38,.18);
+      border-color:rgba(220,38,38,.6);
+    }
+
+    .feedback{
+      margin-top:12px;
+      min-height:28px;
+      font-weight:700;
+      font-size:1rem;
+    }
+
+    .feedback.correct{
+      color:#98f0b7;
+    }
+
+    .feedback.wrong{
+      color:#ff9f9f;
+    }
+
+    .countdown{
+      color:var(--muted);
+      font-weight:400;
+      margin-left:8px;
+    }
+
+    .topic-line{
+      margin:14px 0 16px;
+    }
+
+    .topic-label{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      font-size:.95rem;
+      margin-bottom:6px;
+    }
+
+    .topic-bar{
+      height:14px;
+      background:#2b2b2b;
+      border-radius:999px;
+      overflow:hidden;
+    }
+
+    .topic-fill{
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg,var(--green),var(--gold));
+    }
+
+    .list{
+      margin:10px 0 0;
+      padding-left:18px;
+      color:var(--muted);
+    }
+
+    .muted{
+      color:var(--muted);
+    }
+
+    .actions{
+      margin-top:16px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .tag{
+      display:inline-block;
+      background:#222;
+      border:1px solid #333;
+      padding:8px 10px;
+      border-radius:999px;
+      margin:5px 8px 0 0;
+      color:#f1f1f1;
+      font-size:.9rem;
+    }
+
+    .divider{
+      height:1px;
+      background:var(--line);
+      margin:18px 0;
+    }
+
+    .note{
+      font-size:.9rem;
+      color:var(--muted);
+      line-height:1.45;
+    }
+
+    @media (max-width:640px){
+      .content{padding:16px}
+      .question{font-size:1.12rem}
+      .option{padding:12px}
+      .brand{font-size:1.45rem}
+    }
+  </style>
 </head>
-
 <body>
-
-<div class="container">
-
-<div id="app"></div>
-
-</div>
-
-<script>
-
-/* ---------------- QUESTION BANK ---------------- */
-
-const questionBank=[
-
-{q:"How many minutes are in one hour?",o:["60","100","30","24"],a:0,t:"Measurement"},
-{q:"How many centimetres are in one metre?",o:["10","100","1000","10000"],a:1,t:"Measurement"},
-{q:"300 centimetres equals how many metres?",o:["0.3","3","30","300"],a:1,t:"Measurement"},
-{q:"How many grams are in one kilogram?",o:["100","1000","10","10000"],a:1,t:"Measurement"},
-
-{q:"Which number is largest?",o:["0.56","0.65","0.605","0.6"],a:1,t:"Decimals"},
-{q:"7.5 ÷ 5 equals",o:["0.75","1.5","2.5","15"],a:1,t:"Decimals"},
-{q:"4.2 × 3 equals",o:["12.6","7.2","42","1.26"],a:0,t:"Decimals"},
-
-{q:"10% of 80 equals",o:["8","80","0.8","16"],a:0,t:"Percentages"},
-{q:"10% of 250 equals",o:["25","2.5","250","0.25"],a:0,t:"Percentages"},
-{q:"0.45 written as a percentage",o:["4.5%","45%","450%","0.45%"],a:1,t:"Percentages"},
-
-{q:"1/4 written as a decimal",o:["0.2","0.25","0.4","0.5"],a:1,t:"FDP"},
-{q:"1/5 written as a decimal",o:["0.1","0.2","0.25","0.5"],a:1,t:"FDP"},
-{q:"75% written as a decimal",o:["0.75","7.5","0.075","75"],a:0,t:"FDP"},
-
-{q:"Angles in a triangle add up to",o:["90","180","360","270"],a:1,t:"Angles"},
-{q:"Angles around a point add up to",o:["180","90","360","270"],a:2,t:"Angles"},
-{q:"Angles on a straight line add up to",o:["90","180","360","270"],a:1,t:"Angles"},
-{q:"Corresponding angles are",o:["Equal","180","90","Random"],a:0,t:"Angles"},
-{q:"Co-interior angles",o:["Equal","Add to 180","Add to 90","Random"],a:1,t:"Angles"},
-
-{q:"Which number is prime?",o:["9","11","15","21"],a:1,t:"Prime Factors"},
-{q:"Prime factors of 12 include",o:["2 and 3","4 and 3","6 and 2","12"],a:0,t:"Prime Factors"},
-
-{q:"Round 4.376 to 2 decimal places",o:["4.38","4.37","4.36","4.4"],a:0,t:"Rounding"},
-{q:"Round 3486 to 2 significant figures",o:["3500","3400","3480","3490"],a:0,t:"Rounding"},
-
-{q:"Which axis runs horizontally?",o:["X","Y","Z","Angle"],a:0,t:"Coordinates"},
-{q:"Which axis runs vertically?",o:["X","Y","Z","Angle"],a:1,t:"Coordinates"},
-{q:"Which coordinate comes first?",o:["X","Y","Z","Angle"],a:0,t:"Coordinates"},
-
-{q:"Which symbol means greater than?",o:["<",">","≤","≥"],a:1,t:"Inequalities"},
-{q:"Which symbol means less than?",o:["<","≤",">","≥"],a:0,t:"Inequalities"}
-
-]
-
-/* --------------- GLOBAL VARIABLES --------------- */
-
-let questions=[]
-let index=0
-let score=0
-let locked=false
-let topics={}
-
-/* --------------- START SCREEN ---------------- */
-
-function startScreen(){
-
-document.getElementById("app").innerHTML=`
-
-<h1>GCSE Maths Diagnostic</h1>
-
-<h3>Choose a Mode</h3>
-
-<button onclick="startDiagnostic()">Full Diagnostic</button>
-
-<button onclick="topicMenu()">Practice a Topic</button>
-
-`
-
-}
-
-/* --------------- DIAGNOSTIC MODE ---------------- */
-
-function startDiagnostic(){
-
-questions=shuffle([...questionBank]).slice(0,20)
-
-startQuiz()
-
-}
-
-/* --------------- TOPIC MODE ---------------- */
-
-function topicMenu(){
-
-let topics=[...new Set(questionBank.map(q=>q.t))]
-
-let html="<h2>Select a Topic</h2>"
-
-topics.forEach(t=>{
-html+=`<button class="topicButton" onclick="startTopic('${t}')">${t}</button>`
-})
-
-html+=`<br><button onclick="startScreen()">Back</button>`
-
-document.getElementById("app").innerHTML=html
-
-}
-
-function startTopic(topic){
-
-let topicQuestions=questionBank.filter(q=>q.t===topic)
-
-questions=shuffle(topicQuestions).slice(0,10)
-
-startQuiz()
-
-}
-
-/* --------------- QUIZ ENGINE ---------------- */
-
-function startQuiz(){
-
-index=0
-score=0
-locked=false
-topics={}
-
-loadQuestion()
-
-}
-
-function loadQuestion(){
-
-let q=questions[index]
-
-let html=`
-
-<div class="progress">
-<div class="bar" style="width:${(index/questions.length)*100}%"></div>
-</div>
-
-<h3>${q.q}</h3>
-
-`
-
-q.o.forEach((opt,i)=>{
-
-html+=`<div class="option" onclick="answer(${i})" id="opt${i}">${opt}</div>`
-
-})
-
-html+=`<div id="feedback"></div>`
-
-document.getElementById("app").innerHTML=html
-
-}
-
-function answer(choice){
-
-if(locked) return
-locked=true
-
-let q=questions[index]
-
-if(!topics[q.t]) topics[q.t]={correct:0,total:0}
-
-topics[q.t].total++
-
-if(choice===q.a){
-
-score++
-topics[q.t].correct++
-
-document.getElementById("opt"+choice).classList.add("correct")
-
-document.getElementById("feedback").innerHTML="Correct"
-
-}else{
-
-document.getElementById("opt"+choice).classList.add("wrong")
-
-document.getElementById("opt"+q.a).classList.add("correct")
-
-document.getElementById("feedback").innerHTML="Incorrect"
-
-}
-
-setTimeout(nextQuestion,3000)
-
-}
-
-function nextQuestion(){
-
-index++
-locked=false
-
-if(index<questions.length){
-
-loadQuestion()
-
-}else{
-
-finish()
-
-}
-
-}
-
-/* --------------- RESULT SCREEN ---------------- */
-
-function finish(){
-
-let percent=Math.round(score/questions.length*100)
-
-let html=`<h2>Your Score: ${percent}%</h2>`
-
-html+="<h3>Topic Mastery</h3>"
-
-let weak=[]
-
-for(let t in topics){
-
-let p=Math.round((topics[t].correct/topics[t].total)*100)
-
-html+=`${t} ${p}%`
-
-html+=`<div class="topicBar"><div class="topicFill" style="width:${p}%"></div></div>`
-
-if(p<60) weak.push(t)
-
-}
-
-if(weak.length>0){
-
-html+="<h3>Priority Revision</h3>"
-
-weak.forEach(w=>{
-html+=w+"<br>"
-})
-
-}
-
-html+=`
-
-<br>
-
-<button onclick="startScreen()">Home</button>
-
-<button onclick="startDiagnostic()">Run Diagnostic Again</button>
-
-`
-
-document.getElementById("app").innerHTML=html
-
-}
-
-/* --------------- HELPERS ---------------- */
-
-function shuffle(arr){
-
-return arr.sort(()=>Math.random()-0.5)
-
-}
-
-startScreen()
-
-</script>
-
+  <div class="shell">
+    <div class="frame">
+      <div class="topbar">
+        <h1 class="brand">GCSE Maths Survival Diagnostic</h1>
+        <p class="subtitle">Find gaps. Practise specific topics. Track progress on this device.</p>
+      </div>
+      <div class="content">
+        <div id="app"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ANALYTICS_KEY = "gcseMathsDiagnosticAnalyticsV1";
+
+    const questionBank = [
+      // Measurement
+      {q:"How many minutes are in one hour?",o:["60","100","30","24"],a:0,t:"Measurement"},
+      {q:"How many centimetres are in one metre?",o:["10","100","1000","10000"],a:1,t:"Measurement"},
+      {q:"300 centimetres equals how many metres?",o:["0.3","3","30","300"],a:1,t:"Measurement"},
+      {q:"How many grams are in one kilogram?",o:["100","1000","10","10000"],a:1,t:"Measurement"},
+      {q:"2500 grams equals how many kilograms?",o:["0.25","2.5","25","250"],a:1,t:"Measurement"},
+      {q:"How many millimetres are in one centimetre?",o:["100","1","10","1000"],a:2,t:"Measurement"},
+      {q:"1000 metres equals",o:["1 kilometre","10 kilometres","100 kilometres","0.1 kilometre"],a:0,t:"Measurement"},
+      {q:"5000 millilitres equals",o:["50 litres","5 litres","0.5 litres","500 litres"],a:1,t:"Measurement"},
+      {q:"90 minutes equals",o:["1 hour 10 minutes","1 hour 20 minutes","1 hour 30 minutes","2 hours"],a:2,t:"Measurement"},
+      {q:"0.75 kilograms equals",o:["75 grams","750 grams","7500 grams","7.5 grams"],a:1,t:"Measurement"},
+
+      // Decimals
+      {q:"Which number is largest?",o:["0.56","0.65","0.605","0.6"],a:1,t:"Decimals"},
+      {q:"Which number is smallest?",o:["0.8","0.75","0.82","0.805"],a:1,t:"Decimals"},
+      {q:"4.2 × 3 equals",o:["12.6","7.2","42","1.26"],a:0,t:"Decimals"},
+      {q:"7.5 ÷ 5 equals",o:["0.75","1.5","2.5","15"],a:1,t:"Decimals"},
+      {q:"0.2 + 0.35 equals",o:["0.55","0.37","0.535","0.205"],a:0,t:"Decimals"},
+      {q:"Which number is largest?",o:["0.91","0.9","0.89","0.909"],a:0,t:"Decimals"},
+      {q:"3.6 ÷ 6 equals",o:["6","0.6","0.06","1.6"],a:1,t:"Decimals"},
+      {q:"0.4 × 10 equals",o:["4","0.04","40","0.4"],a:0,t:"Decimals"},
+      {q:"Which number is smallest?",o:["0.24","0.2","0.205","0.25"],a:1,t:"Decimals"},
+      {q:"1.2 + 0.8 equals",o:["1","2","2.8","0.4"],a:1,t:"Decimals"},
+
+      // Percentages
+      {q:"10% of 80 equals",o:["8","80","0.8","16"],a:0,t:"Percentages"},
+      {q:"10% of 250 equals",o:["25","2.5","250","0.25"],a:0,t:"Percentages"},
+      {q:"0.45 written as a percentage",o:["4.5%","45%","450%","0.45%"],a:1,t:"Percentages"},
+      {q:"0.7 written as a percentage",o:["7%","70%","700%","0.07%"],a:1,t:"Percentages"},
+      {q:"50% of 40 equals",o:["20","25","10","30"],a:0,t:"Percentages"},
+      {q:"20% of 50 equals",o:["5","10","20","25"],a:1,t:"Percentages"},
+      {q:"5% of 80 equals",o:["2","4","8","16"],a:1,t:"Percentages"},
+      {q:"25% of 60 equals",o:["10","12","15","20"],a:2,t:"Percentages"},
+      {q:"0.09 written as a percentage",o:["0.9%","9%","90%","0.09%"],a:1,t:"Percentages"},
+      {q:"1% of 300 equals",o:["30","3","0.3","300"],a:1,t:"Percentages"},
+
+      // FDP
+      {q:"1/4 written as a decimal",o:["0.2","0.25","0.4","0.5"],a:1,t:"FDP"},
+      {q:"1/5 written as a decimal",o:["0.1","0.2","0.25","0.5"],a:1,t:"FDP"},
+      {q:"0.5 written as a percentage",o:["5%","50%","500%","0.05%"],a:1,t:"FDP"},
+      {q:"75% written as a decimal",o:["0.75","7.5","0.075","75"],a:0,t:"FDP"},
+      {q:"0.25 written as a percentage",o:["2.5%","25%","250%","0.025%"],a:1,t:"FDP"},
+      {q:"1/2 written as a decimal",o:["0.2","0.25","0.5","2"],a:2,t:"FDP"},
+      {q:"20% written as a decimal",o:["0.2","2","0.02","20"],a:0,t:"FDP"},
+      {q:"0.8 written as a percentage",o:["8%","80%","800%","0.8%"],a:1,t:"FDP"},
+      {q:"1/4 written as a percentage",o:["4%","14%","25%","40%"],a:2,t:"FDP"},
+      {q:"0.6 written as a percentage",o:["6%","60%","600%","0.06%"],a:1,t:"FDP"},
+
+      // Rounding
+      {q:"Round 4.376 to 2 decimal places",o:["4.38","4.37","4.36","4.4"],a:0,t:"Rounding"},
+      {q:"Round 5.843 to 1 decimal place",o:["5.8","5.9","5.84","6"],a:0,t:"Rounding"},
+      {q:"Round 3486 to 2 significant figures",o:["3500","3400","3480","3490"],a:0,t:"Rounding"},
+      {q:"Round 7421 to 1 significant figure",o:["7000","8000","7400","7420"],a:0,t:"Rounding"},
+      {q:"Round 0.0864 to 2 significant figures",o:["0.086","0.087","0.0864","0.09"],a:0,t:"Rounding"},
+      {q:"Round 19.96 to 1 decimal place",o:["20.0","19.9","19.96","20.1"],a:0,t:"Rounding"},
+      {q:"Round 6812 to 2 significant figures",o:["6800","6900","7000","6810"],a:0,t:"Rounding"},
+      {q:"Round 3.14159 to 3 decimal places",o:["3.141","3.142","3.140","3.15"],a:1,t:"Rounding"},
+      {q:"Round 999 to 1 significant figure",o:["900","1000","990","999"],a:1,t:"Rounding"},
+      {q:"Round 2.49 to 1 decimal place",o:["2.4","2.5","2.49","3.0"],a:1,t:"Rounding"},
+
+      // Angles
+      {q:"Angles in a triangle add up to",o:["90","180","360","270"],a:1,t:"Angles"},
+      {q:"Angles around a point add up to",o:["180","90","360","270"],a:2,t:"Angles"},
+      {q:"Angles on a straight line add up to",o:["90","180","360","270"],a:1,t:"Angles"},
+      {q:"Angles in a quadrilateral add up to",o:["90","180","270","360"],a:3,t:"Angles"},
+      {q:"Corresponding angles are",o:["Equal","Add to 180","Add to 90","Random"],a:0,t:"Angles"},
+      {q:"Co-interior angles",o:["Equal","Add to 180","Add to 90","Random"],a:1,t:"Angles"},
+      {q:"Alternate angles are",o:["Equal","Add to 180","Add to 90","Random"],a:0,t:"Angles"},
+      {q:"A full turn is",o:["90°","180°","270°","360°"],a:3,t:"Angles"},
+      {q:"If two angles lie on a straight line, they are",o:["Equal","Supplementary","Acute","Reflex"],a:1,t:"Angles"},
+      {q:"If one of two corresponding angles is 65°, the other is",o:["25°","65°","115°","180°"],a:1,t:"Angles"},
+      {q:"If one of two co-interior angles is 110°, the other is",o:["70°","110°","80°","90°"],a:0,t:"Angles"},
+      {q:"If one of two alternate angles is 48°, the other is",o:["132°","48°","42°","96°"],a:1,t:"Angles"},
+
+      // Prime Factors
+      {q:"Which number is prime?",o:["9","11","15","21"],a:1,t:"Prime Factors"},
+      {q:"Which number is prime?",o:["12","17","18","20"],a:1,t:"Prime Factors"},
+      {q:"Prime factors of 12 include",o:["2 and 3","4 and 3","6 and 2","12"],a:0,t:"Prime Factors"},
+      {q:"Prime factors of 15 include",o:["3 and 5","5 and 10","15 and 3","1 and 15"],a:0,t:"Prime Factors"},
+      {q:"Which number is prime?",o:["27","29","33","39"],a:1,t:"Prime Factors"},
+      {q:"Which number is prime?",o:["51","57","61","63"],a:2,t:"Prime Factors"},
+      {q:"24 as a product of prime factors is",o:["2 × 12","2 × 2 × 2 × 3","4 × 6","3 × 8"],a:1,t:"Prime Factors"},
+      {q:"18 as a product of prime factors is",o:["2 × 3 × 3","6 × 3","9 × 2","1 × 18"],a:0,t:"Prime Factors"},
+      {q:"Which of these is not prime?",o:["2","3","5","9"],a:3,t:"Prime Factors"},
+      {q:"Which of these is prime?",o:["1","2","4","6"],a:1,t:"Prime Factors"},
+
+      // Geometry
+      {q:"A corner of a shape is called",o:["Face","Edge","Vertex","Angle"],a:2,t:"Geometry"},
+      {q:"A flat surface of a solid shape is called",o:["Face","Edge","Vertex","Corner"],a:0,t:"Geometry"},
+      {q:"A line where two faces meet",o:["Face","Edge","Vertex","Side"],a:1,t:"Geometry"},
+      {q:"Which shape has no edges?",o:["Cube","Cylinder","Sphere","Prism"],a:2,t:"Geometry"},
+      {q:"How many faces does a cube have?",o:["4","6","8","12"],a:1,t:"Geometry"},
+      {q:"Which shape has one curved surface and no vertices?",o:["Sphere","Cylinder","Cube","Pyramid"],a:0,t:"Geometry"},
+      {q:"How many vertices does a cuboid have?",o:["4","6","8","12"],a:2,t:"Geometry"},
+      {q:"Which shape has two circular faces?",o:["Cone","Cylinder","Sphere","Cube"],a:1,t:"Geometry"},
+      {q:"Which shape has one vertex?",o:["Cone","Sphere","Cylinder","Cuboid"],a:0,t:"Geometry"},
+      {q:"A square-based pyramid has",o:["1 vertex","5 vertices","8 vertices","2 vertices"],a:1,t:"Geometry"},
+
+      // Coordinates
+      {q:"Which axis runs horizontally?",o:["X","Y","Z","Angle"],a:0,t:"Coordinates"},
+      {q:"Which axis runs vertically?",o:["X","Y","Z","Angle"],a:1,t:"Coordinates"},
+      {q:"Which coordinate comes first?",o:["X","Y","Z","Angle"],a:0,t:"Coordinates"},
+      {q:"Which coordinate comes second?",o:["X","Y","Z","Angle"],a:1,t:"Coordinates"},
+      {q:"The point (3, 5) means",o:["3 across, 5 up","5 across, 3 up","3 down, 5 left","5 down, 3 left"],a:0,t:"Coordinates"},
+      {q:"The point (0, 4) lies on",o:["the x-axis","the y-axis","neither axis","both axes"],a:1,t:"Coordinates"},
+      {q:"The point (6, 0) lies on",o:["the x-axis","the y-axis","neither axis","both axes"],a:0,t:"Coordinates"},
+      {q:"Which point is 2 across and 1 up?",o:["(1,2)","(2,1)","(2,2)","(1,1)"],a:1,t:"Coordinates"},
+      {q:"Which value tells you how far left or right to move?",o:["X","Y","Z","Angle"],a:0,t:"Coordinates"},
+      {q:"Which value tells you how far up or down to move?",o:["X","Y","Z","Angle"],a:1,t:"Coordinates"},
+
+      // Inequalities
+      {q:"Which symbol means greater than?",o:["<",">","≤","≥"],a:1,t:"Inequalities"},
+      {q:"Which symbol means less than?",o:["<","≤",">","≥"],a:0,t:"Inequalities"},
+      {q:"Which symbol means greater than or equal to?",o:[">","≥","<","≤"],a:1,t:"Inequalities"},
+      {q:"Which symbol means less than or equal to?",o:["<","≤",">","≥"],a:1,t:"Inequalities"},
+      {q:"Which sign makes 5 __ 3 true?",o:["<",">","=","≤"],a:1,t:"Inequalities"},
+      {q:"Which sign makes 2 __ 2 true?",o:[">","<","≥","≠"],a:2,t:"Inequalities"},
+      {q:"Which sign makes 4 __ 7 true?",o:[">","<","≥","="],a:1,t:"Inequalities"},
+      {q:"Which sign means a value can be equal as well as bigger?",o:["<",">","≥","≠"],a:2,t:"Inequalities"},
+      {q:"Which sign means a value can be equal as well as smaller?",o:["≤","<",">","≥"],a:0,t:"Inequalities"},
+      {q:"Which is true?",o:["6 < 2","3 ≥ 3","4 > 9","1 ≤ 0"],a:1,t:"Inequalities"},
+
+      // Calculator
+      {q:"(8 + 6) × 5 equals",o:["70","40","14","30"],a:0,t:"Calculator"},
+      {q:"12 ÷ 3 + 4 equals",o:["8","6","4","10"],a:0,t:"Calculator"},
+      {q:"(10 + 5) ÷ 5 equals",o:["2","3","5","4"],a:1,t:"Calculator"},
+      {q:"20 − 6 × 2 equals",o:["28","14","8","16"],a:2,t:"Calculator"},
+      {q:"3 + 4 × 2 equals",o:["14","11","8","7"],a:1,t:"Calculator"},
+      {q:"(3 + 4) × 2 equals",o:["14","11","8","7"],a:0,t:"Calculator"},
+      {q:"18 ÷ (3 × 2) equals",o:["3","6","12","9"],a:0,t:"Calculator"},
+      {q:"5 × 5 − 4 equals",o:["21","25","20","9"],a:0,t:"Calculator"}
+    ];
+
+    const TOPICS = [...new Set(questionBank.map(q => q.t))].sort();
+    const LETTERS = ["A","B","C","D"];
+
+    let questions = [];
+    let index = 0;
+    let score = 0;
+    let locked = false;
+    let countdownInterval = null;
+    let topicScores = {};
+    let currentMode = "";
+    let currentTopic = "";
+
+    function saveAnalytics(result){
+      const existing = JSON.parse(localStorage.getItem(ANALYTICS_KEY) || "[]");
+      existing.push(result);
+      localStorage.setItem(ANALYTICS_KEY, JSON.stringify(existing));
+    }
+
+    function getAnalytics(){
+      return JSON.parse(localStorage.getItem(ANALYTICS_KEY) || "[]");
+    }
+
+    function clearAnalytics(){
+      localStorage.removeItem(ANALYTICS_KEY);
+      analyticsScreen();
+    }
+
+    function shuffle(array){
+      const arr = [...array];
+      for(let i = arr.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function render(html){
+      document.getElementById("app").innerHTML = html;
+    }
+
+    function startScreen(){
+      const analytics = getAnalytics();
+      const attempts = analytics.length;
+      const avg = attempts
+        ? Math.round(analytics.reduce((sum,a)=>sum+a.percent,0) / attempts)
+        : 0;
+
+      render(`
+        <div class="grid">
+          <div class="panel">
+            <h3>Full Diagnostic</h3>
+            <p>20 random questions across topics. Best for finding the main gaps quickly.</p>
+            <button class="big-btn" onclick="startDiagnostic()">Start Full Diagnostic</button>
+          </div>
+          <div class="panel">
+            <h3>Practice a Topic</h3>
+            <p>Choose one topic and complete 10 focused questions.</p>
+            <button class="big-btn" onclick="topicMenu()">Choose a Topic</button>
+          </div>
+          <div class="panel">
+            <h3>Teacher Analytics</h3>
+            <p>See results saved on this browser and device.</p>
+            <button class="big-btn" onclick="analyticsScreen()">Open Analytics</button>
+          </div>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat">
+            <div class="num">${questionBank.length}</div>
+            <div class="label">Questions in bank</div>
+          </div>
+          <div class="stat">
+            <div class="num">${TOPICS.length}</div>
+            <div class="label">Topics covered</div>
+          </div>
+          <div class="stat">
+            <div class="num">${attempts}</div>
+            <div class="label">Saved attempts on this device</div>
+          </div>
+          <div class="stat">
+            <div class="num">${attempts ? avg + "%" : "—"}</div>
+            <div class="label">Average score</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Topics included</h3>
+          <div>
+            ${TOPICS.map(t => `<span class="tag">${t}</span>`).join("")}
+          </div>
+          <div class="divider"></div>
+          <p class="note">Students receive a random set of questions each time. Results are saved only on the device and browser being used.</p>
+        </div>
+      `);
+    }
+
+    function startDiagnostic(){
+      currentMode = "diagnostic";
+      currentTopic = "";
+      questions = shuffle(questionBank).slice(0, 20);
+      startQuiz();
+    }
+
+    function topicMenu(){
+      render(`
+        <div class="panel">
+          <h2>Select a Topic</h2>
+          <p class="muted">Each topic practice uses 10 random questions from that topic.</p>
+          ${TOPICS.map(topic => `<button class="topic-btn" onclick="startTopic('${topic.replace(/'/g, "\\'")}')">${topic}</button>`).join("")}
+          <div class="actions">
+            <button class="small-btn ghost-btn" onclick="startScreen()">Back</button>
+          </div>
+        </div>
+      `);
+    }
+
+    function startTopic(topic){
+      currentMode = "topic";
+      currentTopic = topic;
+      const topicQuestions = questionBank.filter(q => q.t === topic);
+      questions = shuffle(topicQuestions).slice(0, Math.min(10, topicQuestions.length));
+      startQuiz();
+    }
+
+    function startQuiz(){
+      index = 0;
+      score = 0;
+      locked = false;
+      topicScores = {};
+      clearInterval(countdownInterval);
+      loadQuestion();
+    }
+
+    function progressPercent(){
+      return Math.round((index / questions.length) * 100);
+    }
+
+    function loadQuestion(){
+      const q = questions[index];
+      render(`
+        <div class="progress-wrap">
+          <div class="progress-meta">
+            <span>${currentMode === "topic" ? "Topic Practice" : "Full Diagnostic"}${currentTopic ? " · " + currentTopic : ""}</span>
+            <span>Question ${index + 1} of ${questions.length}</span>
+          </div>
+          <div class="progress">
+            <div class="bar" style="width:${progressPercent()}%"></div>
+          </div>
+        </div>
+
+        <div class="question-card">
+          <div class="q-topic">${q.t}</div>
+          <h2 class="question">${q.q}</h2>
+
+          <div id="optionsWrap">
+            ${q.o.map((opt, i) => `
+              <div class="option" id="opt${i}" onclick="answer(${i})">
+                <span class="option-letter">${LETTERS[i]}</span>
+                <span>${opt}</span>
+              </div>
+            `).join("")}
+          </div>
+
+          <div id="feedback" class="feedback"></div>
+
+          <div class="actions">
+            <button class="small-btn ghost-btn" onclick="startScreen()">Exit to Home</button>
+          </div>
+        </div>
+      `);
+    }
+
+    function answer(choice){
+      if(locked) return;
+      locked = true;
+
+      const q = questions[index];
+      if(!topicScores[q.t]){
+        topicScores[q.t] = { correct: 0, total: 0 };
+      }
+      topicScores[q.t].total++;
+
+      const selected = document.getElementById("opt" + choice);
+      const correct = document.getElementById("opt" + q.a);
+      const feedbackEl = document.getElementById("feedback");
+
+      if(choice === q.a){
+        score++;
+        topicScores[q.t].correct++;
+        selected.classList.add("correct");
+        feedbackEl.className = "feedback correct";
+        feedbackEl.innerHTML = `✅ Correct <span class="countdown" id="countdown"></span>`;
+      } else {
+        selected.classList.add("wrong");
+        correct.classList.add("correct");
+        feedbackEl.className = "feedback wrong";
+        feedbackEl.innerHTML = `❌ Incorrect <span class="countdown" id="countdown"></span>`;
+      }
+
+      let remaining = 3;
+      const countdownEl = document.getElementById("countdown");
+      countdownEl.textContent = `· Next question in ${remaining}s`;
+
+      countdownInterval = setInterval(() => {
+        remaining--;
+        if(remaining > 0){
+          countdownEl.textContent = `· Next question in ${remaining}s`;
+        }
+      }, 1000);
+
+      setTimeout(() => {
+        clearInterval(countdownInterval);
+        nextQuestion();
+      }, 3000);
+    }
+
+    function nextQuestion(){
+      index++;
+      locked = false;
+      clearInterval(countdownInterval);
+
+      if(index < questions.length){
+        loadQuestion();
+      } else {
+        finishQuiz();
+      }
+    }
+
+    function buildRevisionAdvice(topicPercentages){
+      const weak = topicPercentages.filter(x => x.percent < 60).sort((a,b) => a.percent - b.percent);
+      return weak;
+    }
+
+    function finishQuiz(){
+      const percent = Math.round((score / questions.length) * 100);
+
+      const topicPercentages = Object.keys(topicScores).map(topic => {
+        const data = topicScores[topic];
+        return {
+          topic,
+          percent: Math.round((data.correct / data.total) * 100),
+          correct: data.correct,
+          total: data.total
+        };
+      }).sort((a,b) => a.topic.localeCompare(b.topic));
+
+      const weak = buildRevisionAdvice(topicPercentages);
+
+      saveAnalytics({
+        date: new Date().toISOString(),
+        mode: currentMode,
+        selectedTopic: currentTopic,
+        percent,
+        score,
+        total: questions.length,
+        topics: topicPercentages
+      });
+
+      render(`
+        <div class="panel">
+          <h2>Student Report</h2>
+          <div class="stat-row">
+            <div class="stat">
+              <div class="num">${score}/${questions.length}</div>
+              <div class="label">Questions correct</div>
+            </div>
+            <div class="stat">
+              <div class="num">${percent}%</div>
+              <div class="label">Overall score</div>
+            </div>
+            <div class="stat">
+              <div class="num">${currentMode === "topic" ? currentTopic : "Mixed"}</div>
+              <div class="label">Mode</div>
+            </div>
+          </div>
+
+          <h3>Topic Mastery</h3>
+          ${topicPercentages.map(item => `
+            <div class="topic-line">
+              <div class="topic-label">
+                <span>${item.topic}</span>
+                <span>${item.percent}% (${item.correct}/${item.total})</span>
+              </div>
+              <div class="topic-bar">
+                <div class="topic-fill" style="width:${item.percent}%"></div>
+              </div>
+            </div>
+          `).join("")}
+
+          <div class="divider"></div>
+
+          <h3>Priority Revision</h3>
+          ${
+            weak.length
+              ? `<ul class="list">${weak.map(w => `<li>${w.topic}</li>`).join("")}</ul>`
+              : `<p class="muted">No major gaps detected in this attempt.</p>`
+          }
+
+          <div class="actions">
+            <button class="small-btn" onclick="startScreen()">Home</button>
+            <button class="small-btn" onclick="${currentMode === "topic" ? `startTopic('${currentTopic.replace(/'/g, "\\'")}')` : "startDiagnostic()"}">Try Again</button>
+            <button class="small-btn ghost-btn" onclick="analyticsScreen()">View Analytics</button>
+          </div>
+        </div>
+      `);
+    }
+
+    function analyticsScreen(){
+      const data = getAnalytics();
+
+      if(!data.length){
+        render(`
+          <div class="panel">
+            <h2>Teacher Analytics</h2>
+            <p class="muted">No saved attempts yet on this device.</p>
+            <div class="actions">
+              <button class="small-btn ghost-btn" onclick="startScreen()">Back</button>
+            </div>
+          </div>
+        `);
+        return;
+      }
+
+      const attempts = data.length;
+      const avg = Math.round(data.reduce((sum, x) => sum + x.percent, 0) / attempts);
+      const latest = data[data.length - 1].percent;
+
+      const topicMap = {};
+      data.forEach(attempt => {
+        attempt.topics.forEach(t => {
+          if(!topicMap[t.topic]){
+            topicMap[t.topic] = { totalPercent: 0, count: 0, weakCount: 0 };
+          }
+          topicMap[t.topic].totalPercent += t.percent;
+          topicMap[t.topic].count += 1;
+          if(t.percent < 60) topicMap[t.topic].weakCount += 1;
+        });
+      });
+
+      const topicSummary = Object.keys(topicMap).map(topic => ({
+        topic,
+        avg: Math.round(topicMap[topic].totalPercent / topicMap[topic].count),
+        weakCount: topicMap[topic].weakCount,
+        count: topicMap[topic].count
+      })).sort((a,b) => a.avg - b.avg);
+
+      render(`
+        <div class="panel">
+          <h2>Teacher Analytics</h2>
+          <p class="note">These results come from this browser on this device only.</p>
+
+          <div class="stat-row">
+            <div class="stat">
+              <div class="num">${attempts}</div>
+              <div class="label">Saved attempts</div>
+            </div>
+            <div class="stat">
+              <div class="num">${avg}%</div>
+              <div class="label">Average score</div>
+            </div>
+            <div class="stat">
+              <div class="num">${latest}%</div>
+              <div class="label">Latest score</div>
+            </div>
+          </div>
+
+          <h3>Weakest Topics</h3>
+          ${topicSummary.map(item => `
+            <div class="topic-line">
+              <div class="topic-label">
+                <span>${item.topic}</span>
+                <span>${item.avg}% average · weak in ${item.weakCount} attempt(s)</span>
+              </div>
+              <div class="topic-bar">
+                <div class="topic-fill" style="width:${item.avg}%"></div>
+              </div>
+            </div>
+          `).join("")}
+
+          <div class="actions">
+            <button class="small-btn ghost-btn" onclick="startScreen()">Back</button>
+            <button class="small-btn danger-btn" onclick="clearAnalytics()">Clear Analytics</button>
+          </div>
+        </div>
+      `);
+    }
+
+    startScreen();
+  </script>
 </body>
 </html>
