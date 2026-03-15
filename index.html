@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>GCSE Maths Survival Test</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f3f3f3;
+padding:40px;
+}
+
+.quiz{
+background:white;
+max-width:800px;
+margin:auto;
+padding:30px;
+border-radius:10px;
+}
+
+.progress{
+height:20px;
+background:#ddd;
+border-radius:10px;
+margin-bottom:20px;
+}
+
+.bar{
+height:20px;
+background:#4CAF50;
+width:0%;
+border-radius:10px;
+}
+
+button{
+padding:10px 20px;
+margin-top:15px;
+font-size:16px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="quiz">
+
+<h2>GCSE Maths Survival Test</h2>
+
+<div class="progress">
+<div id="bar" class="bar"></div>
+</div>
+
+<div id="question"></div>
+<div id="options"></div>
+
+<button onclick="next()">Next</button>
+
+<div id="result"></div>
+
+</div>
+
+<script>
+
+const questions=[
+
+{
+q:"How many minutes are in 1 hour?",
+o:["60","100","30","24"],
+a:0,
+topic:"Measurement"
+},
+
+{
+q:"Find 10% of 80",
+o:["8","80","0.8","16"],
+a:0,
+topic:"Percentages"
+},
+
+{
+q:"Angles in a triangle add up to",
+o:["90","180","360","270"],
+a:1,
+topic:"Angles"
+},
+
+{
+q:"Convert 0.35 to a percentage",
+o:["3.5%","35%","350%","0.35%"],
+a:1,
+topic:"Percentages"
+},
+
+{
+q:"What is 1/5 as a decimal",
+o:["0.1","0.2","0.25","0.5"],
+a:1,
+topic:"FDP"
+}
+
+]
+
+let i=0
+let score=0
+let topics={}
+
+function load(){
+
+let q=questions[i]
+
+document.getElementById("question").innerHTML="<h3>"+q.q+"</h3>"
+
+let html=""
+
+q.o.forEach((opt,index)=>{
+
+html+=`
+<div>
+<input type="radio" name="opt" value="${index}">
+${opt}
+</div>
+`
+
+})
+
+document.getElementById("options").innerHTML=html
+
+updateBar()
+
+}
+
+function next(){
+
+let selected=document.querySelector('input[name="opt"]:checked')
+
+if(!selected)return
+
+let answer=parseInt(selected.value)
+
+let q=questions[i]
+
+if(!topics[q.topic]) topics[q.topic]={correct:0,total:0}
+
+topics[q.topic].total++
+
+if(answer===q.a){
+
+score++
+topics[q.topic].correct++
+
+}
+
+i++
+
+if(i<questions.length){
+
+load()
+
+}else{
+
+finish()
+
+}
+
+}
+
+function updateBar(){
+
+let percent=(i/questions.length)*100
+
+document.getElementById("bar").style.width=percent+"%"
+
+}
+
+function finish(){
+
+let percent=Math.round(score/questions.length*100)
+
+let html="<h2>Your Score: "+percent+"%</h2>"
+
+html+="<h3>Topic Analysis</h3>"
+
+for(let t in topics){
+
+let p=Math.round(topics[t].correct/topics[t].total*100)
+
+html+=t+": "+p+"%<br>"
+
+}
+
+document.getElementById("question").innerHTML=""
+document.getElementById("options").innerHTML=""
+document.getElementById("result").innerHTML=html
+
+}
+
+load()
+
+</script>
+
+</body>
+</html>
