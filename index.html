@@ -1,36 +1,62 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <title>GCSE Maths Survival Test</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 
 body{
 font-family:Arial;
-background:#f3f3f3;
-padding:40px;
+background:#f2f2f2;
+margin:0;
+padding:20px;
 }
 
-.quiz{
-background:white;
-max-width:800px;
+.container{
+max-width:700px;
 margin:auto;
-padding:30px;
+background:white;
+padding:25px;
 border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+h2{
+text-align:center;
 }
 
 .progress{
-height:20px;
 background:#ddd;
+height:18px;
 border-radius:10px;
 margin-bottom:20px;
 }
 
 .bar{
-height:20px;
 background:#4CAF50;
+height:18px;
 width:0%;
 border-radius:10px;
+}
+
+.option{
+padding:12px;
+margin:8px 0;
+background:#f7f7f7;
+border-radius:6px;
+cursor:pointer;
+}
+
+.option:hover{
+background:#e6e6e6;
+}
+
+.feedback{
+font-weight:bold;
+margin-top:10px;
 }
 
 button{
@@ -39,13 +65,30 @@ margin-top:15px;
 font-size:16px;
 }
 
+.result{
+margin-top:20px;
+font-size:18px;
+}
+
+@media(max-width:600px){
+
+.container{
+padding:18px;
+}
+
+.option{
+font-size:16px;
+}
+
+}
+
 </style>
 
 </head>
 
 <body>
 
-<div class="quiz">
+<div class="container">
 
 <h2>GCSE Maths Survival Test</h2>
 
@@ -54,11 +97,14 @@ font-size:16px;
 </div>
 
 <div id="question"></div>
+
 <div id="options"></div>
 
-<button onclick="next()">Next</button>
+<div id="feedback" class="feedback"></div>
 
-<div id="result"></div>
+<button onclick="nextQuestion()">Next</button>
+
+<div id="result" class="result"></div>
 
 </div>
 
@@ -66,96 +112,84 @@ font-size:16px;
 
 const questions=[
 
-{
-q:"How many minutes are in 1 hour?",
-o:["60","100","30","24"],
-a:0,
-topic:"Measurement"
-},
-
-{
-q:"Find 10% of 80",
-o:["8","80","0.8","16"],
-a:0,
-topic:"Percentages"
-},
-
-{
-q:"Angles in a triangle add up to",
-o:["90","180","360","270"],
-a:1,
-topic:"Angles"
-},
-
-{
-q:"Convert 0.35 to a percentage",
-o:["3.5%","35%","350%","0.35%"],
-a:1,
-topic:"Percentages"
-},
-
-{
-q:"What is 1/5 as a decimal",
-o:["0.1","0.2","0.25","0.5"],
-a:1,
-topic:"FDP"
-}
+{q:"How many minutes are in 1 hour?",o:["60","100","30","24"],a:0,topic:"Measurement"},
+{q:"Convert 300 cm into metres",o:["0.3","3","30","300"],a:1,topic:"Measurement"},
+{q:"Find 10% of 80",o:["8","80","0.8","16"],a:0,topic:"Percentages"},
+{q:"Convert 0.35 to a percentage",o:["3.5%","35%","350%","0.35%"],a:1,topic:"Percentages"},
+{q:"What is 1/5 as a decimal?",o:["0.1","0.2","0.25","0.5"],a:1,topic:"FDP"},
+{q:"Angles in a triangle add up to",o:["90","180","360","270"],a:1,topic:"Angles"},
+{q:"Angles around a point equal",o:["90","180","360","270"],a:2,topic:"Angles"},
+{q:"Which number is prime?",o:["9","11","15","21"],a:1,topic:"Prime"},
+{q:"Round 4.376 to 2 decimal places",o:["4.38","4.37","4.36","4.4"],a:0,topic:"Rounding"},
+{q:"Round 3486 to 2 significant figures",o:["3500","3400","3480","3490"],a:0,topic:"Rounding"},
+{q:"Coordinate when x=4 y=2",o:["(4,2)","(2,4)","(4,4)","(2,2)"],a:0,topic:"Coordinates"},
+{q:"Symbol meaning greater than",o:["<",">","≤","≥"],a:1,topic:"Inequalities"},
+{q:"Corresponding angles are",o:["Equal","180","90","Random"],a:0,topic:"Angles"},
+{q:"Co-interior angles",o:["Equal","Add to 180","Add to 90","Random"],a:1,topic:"Angles"},
+{q:"Work out (8+6)×5",o:["70","40","14","30"],a:0,topic:"Calculator"}
 
 ]
 
-let i=0
+let index=0
 let score=0
+let selected=null
+
 let topics={}
 
 function load(){
 
-let q=questions[i]
+const q=questions[index]
 
 document.getElementById("question").innerHTML="<h3>"+q.q+"</h3>"
 
 let html=""
 
-q.o.forEach((opt,index)=>{
+q.o.forEach((opt,i)=>{
 
-html+=`
-<div>
-<input type="radio" name="opt" value="${index}">
-${opt}
-</div>
-`
+html+=`<div class="option" onclick="choose(${i})">${opt}</div>`
 
 })
 
 document.getElementById("options").innerHTML=html
+document.getElementById("feedback").innerHTML=""
+selected=null
 
 updateBar()
 
 }
 
-function next(){
+function choose(i){
 
-let selected=document.querySelector('input[name="opt"]:checked')
+selected=i
 
-if(!selected)return
-
-let answer=parseInt(selected.value)
-
-let q=questions[i]
+const q=questions[index]
 
 if(!topics[q.topic]) topics[q.topic]={correct:0,total:0}
 
 topics[q.topic].total++
 
-if(answer===q.a){
+if(i===q.a){
 
 score++
 topics[q.topic].correct++
 
+document.getElementById("feedback").innerHTML="✅ Correct"
+
+}else{
+
+document.getElementById("feedback").innerHTML="❌ Incorrect"
+
 }
 
-i++
+}
 
-if(i<questions.length){
+function nextQuestion(){
+
+if(selected===null) return
+
+index++
+
+if(index<questions.length){
 
 load()
 
@@ -169,7 +203,7 @@ finish()
 
 function updateBar(){
 
-let percent=(i/questions.length)*100
+let percent=(index/questions.length)*100
 
 document.getElementById("bar").style.width=percent+"%"
 
@@ -177,22 +211,41 @@ document.getElementById("bar").style.width=percent+"%"
 
 function finish(){
 
-let percent=Math.round(score/questions.length*100)
+let percent=Math.round((score/questions.length)*100)
 
 let html="<h2>Your Score: "+percent+"%</h2>"
 
 html+="<h3>Topic Analysis</h3>"
 
+let weak=[]
+
 for(let t in topics){
 
-let p=Math.round(topics[t].correct/topics[t].total*100)
+let p=Math.round((topics[t].correct/topics[t].total)*100)
 
 html+=t+": "+p+"%<br>"
+
+if(p<60) weak.push(t)
+
+}
+
+if(weak.length>0){
+
+html+="<h3>Recommended Revision</h3>"
+
+weak.forEach(w=>{
+html+=w+"<br>"
+})
+
+}else{
+
+html+="<h3>Great work! No major gaps detected.</h3>"
 
 }
 
 document.getElementById("question").innerHTML=""
 document.getElementById("options").innerHTML=""
+document.getElementById("feedback").innerHTML=""
 document.getElementById("result").innerHTML=html
 
 }
