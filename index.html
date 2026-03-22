@@ -1,234 +1,129 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GCSE Maths Diagnostic</title>
-
-<style>
-:root{
---bg1:#052a16;
---bg2:#a88400;
---card:#0d0d0d;
---text:#fff;
---green:#22c55e;
---red:#dc2626;
---gold:#ffd700;
-}
-
-body{
-margin:0;
-font-family:Arial;
-background:linear-gradient(135deg,var(--bg1),var(--bg2));
-display:flex;
-justify-content:center;
-align-items:center;
-min-height:100vh;
-color:white;
-}
-
-.container{
-width:95%;
-max-width:600px;
-background:var(--card);
-padding:25px;
-border-radius:12px;
-box-shadow:0 0 25px rgba(0,0,0,0.6);
-}
-
-button{
-width:100%;
-padding:12px;
-margin:6px 0;
-border:none;
-border-radius:8px;
-cursor:pointer;
-font-size:16px;
-}
-
-.option{
-background:#222;
-color:white;
-}
-
-.option:hover{
-background:#2a2a2a;
-}
-
-.correct{background:var(--green);}
-.wrong{background:var(--red);}
-
-.progress{
-height:12px;
-background:#333;
-border-radius:6px;
-margin-bottom:15px;
-}
-
-.bar{
-height:100%;
-background:var(--gold);
-width:0%;
-border-radius:6px;
-transition:0.3s;
-}
-
-.small{font-size:14px;color:#ccc;}
-</style>
-</head>
-
-<body>
-
-<div class="container">
-<div id="app">Loading...</div>
-</div>
-
 <script>
+const ANALYTICS_KEY = "gcseMathsDiagnosticAnalyticsV1";
 
-let allQuestions = []
-let questions = []
-let index = 0
-let score = 0
-let gaps = {}
-let locked = false
+let questionBank = [];
+let TOPICS = [];
+const LETTERS = ["A","B","C","D"];
 
-// LOAD CSV
-async function loadQuestions(){
+// ✅ LOAD FROM CSV
+async function loadQuestionsFromCSV(){
+  const res = await fetch("questions.csv");
+  const text = await res.text();
 
-const res = await fetch("questions.csv")
-const text = await res.text()
+  const rows = text.trim().split("\n").slice(1);
 
-const rows = text.trim().split("\n").slice(1)
+  questionBank = rows.map(r=>{
+    const c = r.split(",");
 
-return rows.map(r=>{
-const c = r.split(",")
+    return {
+      q: c[2],
+      o: [c[3], c[4], c[5], c[6]],
+      a: parseInt(c[8]),
+      t: c[1]
+    };
+  }).filter(q => q.q);
 
-return {
-topic:c[1],
-question:c[2],
-options:[c[3],c[4],c[5],c[6]],
-answer:parseInt(c[8])
+  TOPICS = [...new Set(questionBank.map(q => q.t))].sort();
+
+  startScreen(); // IMPORTANT: only start AFTER loading
 }
-}).filter(q=>q.question)
 
+// EVERYTHING BELOW = UNCHANGED
+
+let questions = [];
+let index = 0;
+let score = 0;
+let locked = false;
+let countdownInterval = null;
+let topicScores = {};
+let currentMode = "";
+let currentTopic = "";
+
+function saveAnalytics(result){
+  const existing = JSON.parse(localStorage.getItem(ANALYTICS_KEY) || "[]");
+  existing.push(result);
+  localStorage.setItem(ANALYTICS_KEY, JSON.stringify(existing));
 }
 
-// START SCREEN
+function getAnalytics(){
+  return JSON.parse(localStorage.getItem(ANALYTICS_KEY) || "[]");
+}
+
+function clearAnalytics(){
+  localStorage.removeItem(ANALYTICS_KEY);
+  analyticsScreen();
+}
+
+function shuffle(array){
+  const arr = [...array];
+  for(let i = arr.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function render(html){
+  document.getElementById("app").innerHTML = html;
+}
+
 function startScreen(){
+  const analytics = getAnalytics();
+  const attempts = analytics.length;
+  const avg = attempts
+    ? Math.round(analytics.reduce((sum,a)=>sum+a.percent,0) / attempts)
+    : 0;
 
-let topics = [...new Set(allQuestions.map(q=>q.topic))]
+  render(`
+    <div class="grid">
+      <div class="panel">
+        <h3>Full Diagnostic</h3>
+        <p>20 random questions across topics. Best for finding the main gaps quickly.</p>
+        <button class="big-btn" onclick="startDiagnostic()">Start Full Diagnostic</button>
+      </div>
+      <div class="panel">
+        <h3>Practice a Topic</h3>
+        <p>Choose one topic and complete 10 focused questions.</p>
+        <button class="big-btn" onclick="topicMenu()">Choose a Topic</button>
+      </div>
+      <div class="panel">
+        <h3>Teacher Analytics</h3>
+        <p>See results saved on this browser and device.</p>
+        <button class="big-btn" onclick="analyticsScreen()">Open Analytics</button>
+      </div>
+    </div>
 
-document.getElementById("app").innerHTML = `
-<h2>Select Topic</h2>
+    <div class="stat-row">
+      <div class="stat">
+        <div class="num">${questionBank.length}</div>
+        <div class="label">Questions in bank</div>
+      </div>
+      <div class="stat">
+        <div class="num">${TOPICS.length}</div>
+        <div class="label">Topics covered</div>
+      </div>
+      <div class="stat">
+        <div class="num">${attempts}</div>
+        <div class="label">Saved attempts on this device</div>
+      </div>
+      <div class="stat">
+        <div class="num">${attempts ? avg + "%" : "—"}</div>
+        <div class="label">Average score</div>
+      </div>
+    </div>
 
-${topics.map(t=>`
-<button onclick="startQuiz('${t}')">${t}</button>
-`).join("")}
-`
+    <div class="panel">
+      <h3>Topics included</h3>
+      <div>
+        ${TOPICS.map(t => `<span class="tag">${t}</span>`).join("")}
+      </div>
+      <div class="divider"></div>
+      <p class="note">Students receive a random set of questions each time. Results are saved only on the device and browser being used.</p>
+    </div>
+  `);
 }
 
-// START QUIZ
-function startQuiz(topic){
-
-index = 0
-score = 0
-gaps = {}
-
-questions = allQuestions
-.filter(q=>q.topic === topic)
-.sort(()=>0.5 - Math.random())
-.slice(0,10)
-
-showQuestion()
-}
-
-// SHOW QUESTION
-function showQuestion(){
-
-let q = questions[index]
-
-document.getElementById("app").innerHTML = `
-<div class="progress">
-<div class="bar" style="width:${(index/questions.length)*100}%"></div>
-</div>
-
-<h3>Question ${index + 1}</h3>
-<p>${q.question}</p>
-
-${q.options.map((opt,i)=>`
-<button class="option" onclick="answer(${i}, this)">${opt}</button>
-`).join("")}
-`
-}
-
-// ANSWER HANDLER
-function answer(choice, btn){
-
-if(locked) return
-locked = true
-
-let q = questions[index]
-let correct = q.answer
-
-let buttons = document.querySelectorAll(".option")
-
-buttons.forEach(b=>b.disabled = true)
-
-if(choice === correct){
-
-btn.classList.add("correct")
-score++
-
-}else{
-
-btn.classList.add("wrong")
-buttons[correct].classList.add("correct")
-
-gaps[q.topic] = (gaps[q.topic] || 0) + 1
-}
-
-// AUTO NEXT
-setTimeout(()=>{
-index++
-locked = false
-
-if(index < questions.length){
-showQuestion()
-}else{
-showResults()
-}
-
-},2000)
-
-}
-
-// RESULTS
-function showResults(){
-
-let weak = Object.keys(gaps).length
-? Object.keys(gaps).join(", ")
-: "None"
-
-document.getElementById("app").innerHTML = `
-<h2>Results</h2>
-
-<p><strong>Score:</strong> ${score}/${questions.length}</p>
-
-<p><strong>Focus Areas:</strong><br>${weak}</p>
-
-<p class="small">Revise these topics and try again.</p>
-
-<button onclick="startScreen()">Back to Topics</button>
-`
-}
-
-// INIT
-loadQuestions().then(q=>{
-allQuestions = q
-startScreen()
-})
-
+// ⛔ REMOVE old startScreen() call
+// ✅ REPLACE WITH THIS:
+loadQuestionsFromCSV();
 </script>
-
-</body>
-</html>
