@@ -349,6 +349,12 @@
       line-height:1.45;
     }
 
+    .loading{
+      text-align:center;
+      padding:28px 12px;
+      color:var(--muted);
+    }
+
     @media (max-width:640px){
       .content{padding:16px}
       .question{font-size:1.12rem}
@@ -365,150 +371,19 @@
         <p class="subtitle">Find gaps. Practise specific topics. Track progress on this device.</p>
       </div>
       <div class="content">
-        <div id="app"></div>
+        <div id="app">
+          <div class="loading">Loading questions…</div>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
     const ANALYTICS_KEY = "gcseMathsDiagnosticAnalyticsV1";
-
-    const questionBank = [
-      // Measurement
-      {q:"How many minutes are in one hour?",o:["60","100","30","24"],a:0,t:"Measurement"},
-      {q:"How many centimetres are in one metre?",o:["10","100","1000","10000"],a:1,t:"Measurement"},
-      {q:"300 centimetres equals how many metres?",o:["0.3","3","30","300"],a:1,t:"Measurement"},
-      {q:"How many grams are in one kilogram?",o:["100","1000","10","10000"],a:1,t:"Measurement"},
-      {q:"2500 grams equals how many kilograms?",o:["0.25","2.5","25","250"],a:1,t:"Measurement"},
-      {q:"How many millimetres are in one centimetre?",o:["100","1","10","1000"],a:2,t:"Measurement"},
-      {q:"1000 metres equals",o:["1 kilometre","10 kilometres","100 kilometres","0.1 kilometre"],a:0,t:"Measurement"},
-      {q:"5000 millilitres equals",o:["50 litres","5 litres","0.5 litres","500 litres"],a:1,t:"Measurement"},
-      {q:"90 minutes equals",o:["1 hour 10 minutes","1 hour 20 minutes","1 hour 30 minutes","2 hours"],a:2,t:"Measurement"},
-      {q:"0.75 kilograms equals",o:["75 grams","750 grams","7500 grams","7.5 grams"],a:1,t:"Measurement"},
-
-      // Decimals
-      {q:"Which number is largest?",o:["0.56","0.65","0.605","0.6"],a:1,t:"Decimals"},
-      {q:"Which number is smallest?",o:["0.8","0.75","0.82","0.805"],a:1,t:"Decimals"},
-      {q:"4.2 × 3 equals",o:["12.6","7.2","42","1.26"],a:0,t:"Decimals"},
-      {q:"7.5 ÷ 5 equals",o:["0.75","1.5","2.5","15"],a:1,t:"Decimals"},
-      {q:"0.2 + 0.35 equals",o:["0.55","0.37","0.535","0.205"],a:0,t:"Decimals"},
-      {q:"Which number is largest?",o:["0.91","0.9","0.89","0.909"],a:0,t:"Decimals"},
-      {q:"3.6 ÷ 6 equals",o:["6","0.6","0.06","1.6"],a:1,t:"Decimals"},
-      {q:"0.4 × 10 equals",o:["4","0.04","40","0.4"],a:0,t:"Decimals"},
-      {q:"Which number is smallest?",o:["0.24","0.2","0.205","0.25"],a:1,t:"Decimals"},
-      {q:"1.2 + 0.8 equals",o:["1","2","2.8","0.4"],a:1,t:"Decimals"},
-
-      // Percentages
-      {q:"10% of 80 equals",o:["8","80","0.8","16"],a:0,t:"Percentages"},
-      {q:"10% of 250 equals",o:["25","2.5","250","0.25"],a:0,t:"Percentages"},
-      {q:"0.45 written as a percentage",o:["4.5%","45%","450%","0.45%"],a:1,t:"Percentages"},
-      {q:"0.7 written as a percentage",o:["7%","70%","700%","0.07%"],a:1,t:"Percentages"},
-      {q:"50% of 40 equals",o:["20","25","10","30"],a:0,t:"Percentages"},
-      {q:"20% of 50 equals",o:["5","10","20","25"],a:1,t:"Percentages"},
-      {q:"5% of 80 equals",o:["2","4","8","16"],a:1,t:"Percentages"},
-      {q:"25% of 60 equals",o:["10","12","15","20"],a:2,t:"Percentages"},
-      {q:"0.09 written as a percentage",o:["0.9%","9%","90%","0.09%"],a:1,t:"Percentages"},
-      {q:"1% of 300 equals",o:["30","3","0.3","300"],a:1,t:"Percentages"},
-
-      // FDP
-      {q:"1/4 written as a decimal",o:["0.2","0.25","0.4","0.5"],a:1,t:"FDP"},
-      {q:"1/5 written as a decimal",o:["0.1","0.2","0.25","0.5"],a:1,t:"FDP"},
-      {q:"0.5 written as a percentage",o:["5%","50%","500%","0.05%"],a:1,t:"FDP"},
-      {q:"75% written as a decimal",o:["0.75","7.5","0.075","75"],a:0,t:"FDP"},
-      {q:"0.25 written as a percentage",o:["2.5%","25%","250%","0.025%"],a:1,t:"FDP"},
-      {q:"1/2 written as a decimal",o:["0.2","0.25","0.5","2"],a:2,t:"FDP"},
-      {q:"20% written as a decimal",o:["0.2","2","0.02","20"],a:0,t:"FDP"},
-      {q:"0.8 written as a percentage",o:["8%","80%","800%","0.8%"],a:1,t:"FDP"},
-      {q:"1/4 written as a percentage",o:["4%","14%","25%","40%"],a:2,t:"FDP"},
-      {q:"0.6 written as a percentage",o:["6%","60%","600%","0.06%"],a:1,t:"FDP"},
-
-      // Rounding
-      {q:"Round 4.376 to 2 decimal places",o:["4.38","4.37","4.36","4.4"],a:0,t:"Rounding"},
-      {q:"Round 5.843 to 1 decimal place",o:["5.8","5.9","5.84","6"],a:0,t:"Rounding"},
-      {q:"Round 3486 to 2 significant figures",o:["3500","3400","3480","3490"],a:0,t:"Rounding"},
-      {q:"Round 7421 to 1 significant figure",o:["7000","8000","7400","7420"],a:0,t:"Rounding"},
-      {q:"Round 0.0864 to 2 significant figures",o:["0.086","0.087","0.0864","0.09"],a:0,t:"Rounding"},
-      {q:"Round 19.96 to 1 decimal place",o:["20.0","19.9","19.96","20.1"],a:0,t:"Rounding"},
-      {q:"Round 6812 to 2 significant figures",o:["6800","6900","7000","6810"],a:0,t:"Rounding"},
-      {q:"Round 3.14159 to 3 decimal places",o:["3.141","3.142","3.140","3.15"],a:1,t:"Rounding"},
-      {q:"Round 999 to 1 significant figure",o:["900","1000","990","999"],a:1,t:"Rounding"},
-      {q:"Round 2.49 to 1 decimal place",o:["2.4","2.5","2.49","3.0"],a:1,t:"Rounding"},
-
-      // Angles
-      {q:"Angles in a triangle add up to",o:["90","180","360","270"],a:1,t:"Angles"},
-      {q:"Angles around a point add up to",o:["180","90","360","270"],a:2,t:"Angles"},
-      {q:"Angles on a straight line add up to",o:["90","180","360","270"],a:1,t:"Angles"},
-      {q:"Angles in a quadrilateral add up to",o:["90","180","270","360"],a:3,t:"Angles"},
-      {q:"Corresponding angles are",o:["Equal","Add to 180","Add to 90","Random"],a:0,t:"Angles"},
-      {q:"Co-interior angles",o:["Equal","Add to 180","Add to 90","Random"],a:1,t:"Angles"},
-      {q:"Alternate angles are",o:["Equal","Add to 180","Add to 90","Random"],a:0,t:"Angles"},
-      {q:"A full turn is",o:["90°","180°","270°","360°"],a:3,t:"Angles"},
-      {q:"If two angles lie on a straight line, they are",o:["Equal","Supplementary","Acute","Reflex"],a:1,t:"Angles"},
-      {q:"If one of two corresponding angles is 65°, the other is",o:["25°","65°","115°","180°"],a:1,t:"Angles"},
-      {q:"If one of two co-interior angles is 110°, the other is",o:["70°","110°","80°","90°"],a:0,t:"Angles"},
-      {q:"If one of two alternate angles is 48°, the other is",o:["132°","48°","42°","96°"],a:1,t:"Angles"},
-
-      // Prime Factors
-      {q:"Which number is prime?",o:["9","11","15","21"],a:1,t:"Prime Factors"},
-      {q:"Which number is prime?",o:["12","17","18","20"],a:1,t:"Prime Factors"},
-      {q:"Prime factors of 12 include",o:["2 and 3","4 and 3","6 and 2","12"],a:0,t:"Prime Factors"},
-      {q:"Prime factors of 15 include",o:["3 and 5","5 and 10","15 and 3","1 and 15"],a:0,t:"Prime Factors"},
-      {q:"Which number is prime?",o:["27","29","33","39"],a:1,t:"Prime Factors"},
-      {q:"Which number is prime?",o:["51","57","61","63"],a:2,t:"Prime Factors"},
-      {q:"24 as a product of prime factors is",o:["2 × 12","2 × 2 × 2 × 3","4 × 6","3 × 8"],a:1,t:"Prime Factors"},
-      {q:"18 as a product of prime factors is",o:["2 × 3 × 3","6 × 3","9 × 2","1 × 18"],a:0,t:"Prime Factors"},
-      {q:"Which of these is not prime?",o:["2","3","5","9"],a:3,t:"Prime Factors"},
-      {q:"Which of these is prime?",o:["1","2","4","6"],a:1,t:"Prime Factors"},
-
-      // Geometry
-      {q:"A corner of a shape is called",o:["Face","Edge","Vertex","Angle"],a:2,t:"Geometry"},
-      {q:"A flat surface of a solid shape is called",o:["Face","Edge","Vertex","Corner"],a:0,t:"Geometry"},
-      {q:"A line where two faces meet",o:["Face","Edge","Vertex","Side"],a:1,t:"Geometry"},
-      {q:"Which shape has no edges?",o:["Cube","Cylinder","Sphere","Prism"],a:2,t:"Geometry"},
-      {q:"How many faces does a cube have?",o:["4","6","8","12"],a:1,t:"Geometry"},
-      {q:"Which shape has one curved surface and no vertices?",o:["Sphere","Cylinder","Cube","Pyramid"],a:0,t:"Geometry"},
-      {q:"How many vertices does a cuboid have?",o:["4","6","8","12"],a:2,t:"Geometry"},
-      {q:"Which shape has two circular faces?",o:["Cone","Cylinder","Sphere","Cube"],a:1,t:"Geometry"},
-      {q:"Which shape has one vertex?",o:["Cone","Sphere","Cylinder","Cuboid"],a:0,t:"Geometry"},
-      {q:"A square-based pyramid has",o:["1 vertex","5 vertices","8 vertices","2 vertices"],a:1,t:"Geometry"},
-
-      // Coordinates
-      {q:"Which axis runs horizontally?",o:["X","Y","Z","Angle"],a:0,t:"Coordinates"},
-      {q:"Which axis runs vertically?",o:["X","Y","Z","Angle"],a:1,t:"Coordinates"},
-      {q:"Which coordinate comes first?",o:["X","Y","Z","Angle"],a:0,t:"Coordinates"},
-      {q:"Which coordinate comes second?",o:["X","Y","Z","Angle"],a:1,t:"Coordinates"},
-      {q:"The point (3, 5) means",o:["3 across, 5 up","5 across, 3 up","3 down, 5 left","5 down, 3 left"],a:0,t:"Coordinates"},
-      {q:"The point (0, 4) lies on",o:["the x-axis","the y-axis","neither axis","both axes"],a:1,t:"Coordinates"},
-      {q:"The point (6, 0) lies on",o:["the x-axis","the y-axis","neither axis","both axes"],a:0,t:"Coordinates"},
-      {q:"Which point is 2 across and 1 up?",o:["(1,2)","(2,1)","(2,2)","(1,1)"],a:1,t:"Coordinates"},
-      {q:"Which value tells you how far left or right to move?",o:["X","Y","Z","Angle"],a:0,t:"Coordinates"},
-      {q:"Which value tells you how far up or down to move?",o:["X","Y","Z","Angle"],a:1,t:"Coordinates"},
-
-      // Inequalities
-      {q:"Which symbol means greater than?",o:["<",">","≤","≥"],a:1,t:"Inequalities"},
-      {q:"Which symbol means less than?",o:["<","≤",">","≥"],a:0,t:"Inequalities"},
-      {q:"Which symbol means greater than or equal to?",o:[">","≥","<","≤"],a:1,t:"Inequalities"},
-      {q:"Which symbol means less than or equal to?",o:["<","≤",">","≥"],a:1,t:"Inequalities"},
-      {q:"Which sign makes 5 __ 3 true?",o:["<",">","=","≤"],a:1,t:"Inequalities"},
-      {q:"Which sign makes 2 __ 2 true?",o:[">","<","≥","≠"],a:2,t:"Inequalities"},
-      {q:"Which sign makes 4 __ 7 true?",o:[">","<","≥","="],a:1,t:"Inequalities"},
-      {q:"Which sign means a value can be equal as well as bigger?",o:["<",">","≥","≠"],a:2,t:"Inequalities"},
-      {q:"Which sign means a value can be equal as well as smaller?",o:["≤","<",">","≥"],a:0,t:"Inequalities"},
-      {q:"Which is true?",o:["6 < 2","3 ≥ 3","4 > 9","1 ≤ 0"],a:1,t:"Inequalities"},
-
-      // Calculator
-      {q:"(8 + 6) × 5 equals",o:["70","40","14","30"],a:0,t:"Calculator"},
-      {q:"12 ÷ 3 + 4 equals",o:["8","6","4","10"],a:0,t:"Calculator"},
-      {q:"(10 + 5) ÷ 5 equals",o:["2","3","5","4"],a:1,t:"Calculator"},
-      {q:"20 − 6 × 2 equals",o:["28","14","8","16"],a:2,t:"Calculator"},
-      {q:"3 + 4 × 2 equals",o:["14","11","8","7"],a:1,t:"Calculator"},
-      {q:"(3 + 4) × 2 equals",o:["14","11","8","7"],a:0,t:"Calculator"},
-      {q:"18 ÷ (3 × 2) equals",o:["3","6","12","9"],a:0,t:"Calculator"},
-      {q:"5 × 5 − 4 equals",o:["21","25","20","9"],a:0,t:"Calculator"}
-    ];
-
-    const TOPICS = [...new Set(questionBank.map(q => q.t))].sort();
     const LETTERS = ["A","B","C","D"];
+
+    let questionBank = [];
+    let TOPICS = [];
 
     let questions = [];
     let index = 0;
@@ -518,6 +393,10 @@
     let topicScores = {};
     let currentMode = "";
     let currentTopic = "";
+
+    function render(html){
+      document.getElementById("app").innerHTML = html;
+    }
 
     function saveAnalytics(result){
       const existing = JSON.parse(localStorage.getItem(ANALYTICS_KEY) || "[]");
@@ -543,15 +422,177 @@
       return arr;
     }
 
-    function render(html){
-      document.getElementById("app").innerHTML = html;
+    function escapeHtml(value){
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function normaliseActive(value){
+      const v = String(value ?? "").trim().toLowerCase();
+      return v === "yes" || v === "true" || v === "1" || v === "y";
+    }
+
+    function parseCsv(text){
+      const rows = [];
+      let row = [];
+      let cell = "";
+      let inQuotes = false;
+
+      for(let i = 0; i < text.length; i++){
+        const char = text[i];
+        const next = text[i + 1];
+
+        if(char === '"'){
+          if(inQuotes && next === '"'){
+            cell += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if(char === ',' && !inQuotes){
+          row.push(cell);
+          cell = "";
+        } else if((char === '\n' || char === '\r') && !inQuotes){
+          if(char === '\r' && next === '\n'){
+            i++;
+          }
+          row.push(cell);
+          rows.push(row);
+          row = [];
+          cell = "";
+        } else {
+          cell += char;
+        }
+      }
+
+      if(cell.length > 0 || row.length > 0){
+        row.push(cell);
+        rows.push(row);
+      }
+
+      return rows
+        .map(r => r.map(c => String(c ?? "").trim()))
+        .filter(r => r.some(c => c !== ""));
+    }
+
+    function buildQuestionBankFromCsv(text){
+      const rows = parseCsv(text);
+
+      if(rows.length < 2){
+        throw new Error("questions.csv appears to be empty or missing data rows.");
+      }
+
+      const headers = rows[0].map(h => h.trim().toLowerCase());
+
+      const idx = {
+        id: headers.indexOf("id"),
+        topic: headers.indexOf("topic"),
+        question: headers.indexOf("question"),
+        optionA: headers.indexOf("option a"),
+        optionB: headers.indexOf("option b"),
+        optionC: headers.indexOf("option c"),
+        optionD: headers.indexOf("option d"),
+        correctLetter: headers.indexOf("correct letter"),
+        correctIndex: headers.indexOf("correct index"),
+        active: headers.indexOf("active"),
+        notes: headers.indexOf("notes")
+      };
+
+      const required = ["topic","question","optionA","optionB","optionC","optionD"];
+      for(const key of required){
+        if(idx[key] === -1){
+          throw new Error(`Missing required CSV column: ${key}`);
+        }
+      }
+
+      const parsed = rows.slice(1).map((cols, rowIndex) => {
+        const activeValue = idx.active !== -1 ? cols[idx.active] : "Yes";
+        if(!normaliseActive(activeValue)) return null;
+
+        const question = cols[idx.question] ?? "";
+        const topic = cols[idx.topic] ?? "";
+        const options = [
+          cols[idx.optionA] ?? "",
+          cols[idx.optionB] ?? "",
+          cols[idx.optionC] ?? "",
+          cols[idx.optionD] ?? ""
+        ];
+
+        let answerIndex = -1;
+
+        if(idx.correctIndex !== -1 && cols[idx.correctIndex] !== ""){
+          const parsedIndex = Number(cols[idx.correctIndex]);
+          if(Number.isInteger(parsedIndex) && parsedIndex >= 0 && parsedIndex <= 3){
+            answerIndex = parsedIndex;
+          }
+        }
+
+        if(answerIndex === -1 && idx.correctLetter !== -1){
+          const letter = String(cols[idx.correctLetter] ?? "").trim().toUpperCase();
+          answerIndex = LETTERS.indexOf(letter);
+        }
+
+        if(!question || !topic || options.some(o => o === "") || answerIndex < 0 || answerIndex > 3){
+          console.warn("Skipping invalid CSV row", rowIndex + 2, cols);
+          return null;
+        }
+
+        return {
+          q: question,
+          o: options,
+          a: answerIndex,
+          t: topic
+        };
+      }).filter(Boolean);
+
+      if(!parsed.length){
+        throw new Error("No valid active questions were found in questions.csv.");
+      }
+
+      return parsed;
+    }
+
+    async function loadQuestions(){
+      try{
+        const response = await fetch("questions.csv", { cache: "no-store" });
+        if(!response.ok){
+          throw new Error(`Unable to load questions.csv (${response.status})`);
+        }
+
+        const text = await response.text();
+        questionBank = buildQuestionBankFromCsv(text);
+        TOPICS = [...new Set(questionBank.map(q => q.t))].sort((a,b) => a.localeCompare(b));
+
+        startScreen();
+      } catch(error){
+        console.error(error);
+        render(`
+          <div class="panel">
+            <h2>Unable to load questions</h2>
+            <p class="muted">The app could not read <strong>questions.csv</strong>.</p>
+            <div class="divider"></div>
+            <p class="note">
+              Check that:
+              <br>• <strong>questions.csv</strong> is in the same folder as this HTML file
+              <br>• the file includes the expected column headings
+              <br>• you are opening the site through GitHub Pages or another web server
+            </p>
+            <div class="divider"></div>
+            <p class="note"><strong>Error:</strong> ${escapeHtml(error.message)}</p>
+          </div>
+        `);
+      }
     }
 
     function startScreen(){
       const analytics = getAnalytics();
       const attempts = analytics.length;
       const avg = attempts
-        ? Math.round(analytics.reduce((sum,a)=>sum+a.percent,0) / attempts)
+        ? Math.round(analytics.reduce((sum,a)=>sum + a.percent, 0) / attempts)
         : 0;
 
       render(`
@@ -595,7 +636,7 @@
         <div class="panel">
           <h3>Topics included</h3>
           <div>
-            ${TOPICS.map(t => `<span class="tag">${t}</span>`).join("")}
+            ${TOPICS.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join("")}
           </div>
           <div class="divider"></div>
           <p class="note">Students receive a random set of questions each time. Results are saved only on the device and browser being used.</p>
@@ -606,7 +647,7 @@
     function startDiagnostic(){
       currentMode = "diagnostic";
       currentTopic = "";
-      questions = shuffle(questionBank).slice(0, 20);
+      questions = shuffle(questionBank).slice(0, Math.min(20, questionBank.length));
       startQuiz();
     }
 
@@ -614,8 +655,12 @@
       render(`
         <div class="panel">
           <h2>Select a Topic</h2>
-          <p class="muted">Each topic practice uses 10 random questions from that topic.</p>
-          ${TOPICS.map(topic => `<button class="topic-btn" onclick="startTopic('${topic.replace(/'/g, "\\'")}')">${topic}</button>`).join("")}
+          <p class="muted">Each topic practice uses up to 10 random questions from that topic.</p>
+          ${TOPICS.map(topic => `
+            <button class="topic-btn" onclick="startTopic(decodeURIComponent('${encodeURIComponent(topic)}'))">
+              ${escapeHtml(topic)}
+            </button>
+          `).join("")}
           <div class="actions">
             <button class="small-btn ghost-btn" onclick="startScreen()">Back</button>
           </div>
@@ -637,6 +682,20 @@
       locked = false;
       topicScores = {};
       clearInterval(countdownInterval);
+
+      if(!questions.length){
+        render(`
+          <div class="panel">
+            <h2>No questions available</h2>
+            <p class="muted">There are no valid questions available for this selection.</p>
+            <div class="actions">
+              <button class="small-btn ghost-btn" onclick="startScreen()">Back</button>
+            </div>
+          </div>
+        `);
+        return;
+      }
+
       loadQuestion();
     }
 
@@ -646,10 +705,11 @@
 
     function loadQuestion(){
       const q = questions[index];
+
       render(`
         <div class="progress-wrap">
           <div class="progress-meta">
-            <span>${currentMode === "topic" ? "Topic Practice" : "Full Diagnostic"}${currentTopic ? " · " + currentTopic : ""}</span>
+            <span>${currentMode === "topic" ? "Topic Practice" : "Full Diagnostic"}${currentTopic ? " · " + escapeHtml(currentTopic) : ""}</span>
             <span>Question ${index + 1} of ${questions.length}</span>
           </div>
           <div class="progress">
@@ -658,14 +718,14 @@
         </div>
 
         <div class="question-card">
-          <div class="q-topic">${q.t}</div>
-          <h2 class="question">${q.q}</h2>
+          <div class="q-topic">${escapeHtml(q.t)}</div>
+          <h2 class="question">${escapeHtml(q.q)}</h2>
 
           <div id="optionsWrap">
             ${q.o.map((opt, i) => `
               <div class="option" id="opt${i}" onclick="answer(${i})">
                 <span class="option-letter">${LETTERS[i]}</span>
-                <span>${opt}</span>
+                <span>${escapeHtml(opt)}</span>
               </div>
             `).join("")}
           </div>
@@ -712,7 +772,7 @@
 
       countdownInterval = setInterval(() => {
         remaining--;
-        if(remaining > 0){
+        if(remaining > 0 && countdownEl){
           countdownEl.textContent = `· Next question in ${remaining}s`;
         }
       }, 1000);
@@ -736,8 +796,9 @@
     }
 
     function buildRevisionAdvice(topicPercentages){
-      const weak = topicPercentages.filter(x => x.percent < 60).sort((a,b) => a.percent - b.percent);
-      return weak;
+      return topicPercentages
+        .filter(x => x.percent < 60)
+        .sort((a,b) => a.percent - b.percent);
     }
 
     function finishQuiz(){
@@ -778,7 +839,7 @@
               <div class="label">Overall score</div>
             </div>
             <div class="stat">
-              <div class="num">${currentMode === "topic" ? currentTopic : "Mixed"}</div>
+              <div class="num">${currentMode === "topic" ? escapeHtml(currentTopic) : "Mixed"}</div>
               <div class="label">Mode</div>
             </div>
           </div>
@@ -787,7 +848,7 @@
           ${topicPercentages.map(item => `
             <div class="topic-line">
               <div class="topic-label">
-                <span>${item.topic}</span>
+                <span>${escapeHtml(item.topic)}</span>
                 <span>${item.percent}% (${item.correct}/${item.total})</span>
               </div>
               <div class="topic-bar">
@@ -801,13 +862,15 @@
           <h3>Priority Revision</h3>
           ${
             weak.length
-              ? `<ul class="list">${weak.map(w => `<li>${w.topic}</li>`).join("")}</ul>`
+              ? `<ul class="list">${weak.map(w => `<li>${escapeHtml(w.topic)}</li>`).join("")}</ul>`
               : `<p class="muted">No major gaps detected in this attempt.</p>`
           }
 
           <div class="actions">
             <button class="small-btn" onclick="startScreen()">Home</button>
-            <button class="small-btn" onclick="${currentMode === "topic" ? `startTopic('${currentTopic.replace(/'/g, "\\'")}')` : "startDiagnostic()"}">Try Again</button>
+            <button class="small-btn" onclick="${currentMode === "topic"
+              ? `startTopic(decodeURIComponent('${encodeURIComponent(currentTopic)}'))`
+              : `startDiagnostic()`}">Try Again</button>
             <button class="small-btn ghost-btn" onclick="analyticsScreen()">View Analytics</button>
           </div>
         </div>
@@ -836,7 +899,7 @@
 
       const topicMap = {};
       data.forEach(attempt => {
-        attempt.topics.forEach(t => {
+        (attempt.topics || []).forEach(t => {
           if(!topicMap[t.topic]){
             topicMap[t.topic] = { totalPercent: 0, count: 0, weakCount: 0 };
           }
@@ -877,7 +940,7 @@
           ${topicSummary.map(item => `
             <div class="topic-line">
               <div class="topic-label">
-                <span>${item.topic}</span>
+                <span>${escapeHtml(item.topic)}</span>
                 <span>${item.avg}% average · weak in ${item.weakCount} attempt(s)</span>
               </div>
               <div class="topic-bar">
@@ -894,7 +957,7 @@
       `);
     }
 
-    startScreen();
+    loadQuestions();
   </script>
 </body>
 </html>
