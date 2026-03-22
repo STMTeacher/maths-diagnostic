@@ -10,7 +10,7 @@
 --bg1:#052a16;
 --bg2:#a88400;
 --card:#0d0d0d;
---text:#ffffff;
+--text:#fff;
 --green:#22c55e;
 --red:#dc2626;
 --gold:#ffd700;
@@ -18,26 +18,22 @@
 
 body{
 margin:0;
-font-family:Arial, sans-serif;
+font-family:Arial;
 background:linear-gradient(135deg,var(--bg1),var(--bg2));
-color:var(--text);
 display:flex;
 justify-content:center;
 align-items:center;
 min-height:100vh;
+color:white;
 }
 
 .container{
 width:95%;
-max-width:500px;
+max-width:600px;
 background:var(--card);
-padding:20px;
+padding:25px;
 border-radius:12px;
-box-shadow:0 0 20px rgba(0,0,0,0.6);
-}
-
-h2, h3{
-margin:10px 0;
+box-shadow:0 0 25px rgba(0,0,0,0.6);
 }
 
 button{
@@ -51,7 +47,7 @@ font-size:16px;
 }
 
 .option{
-background:#1f1f1f;
+background:#222;
 color:white;
 }
 
@@ -59,33 +55,25 @@ color:white;
 background:#2a2a2a;
 }
 
-.correct{
-background:var(--green);
-}
-
-.wrong{
-background:var(--red);
-}
+.correct{background:var(--green);}
+.wrong{background:var(--red);}
 
 .progress{
-height:10px;
+height:12px;
 background:#333;
-border-radius:5px;
+border-radius:6px;
 margin-bottom:15px;
 }
 
-.progress-bar{
+.bar{
 height:100%;
 background:var(--gold);
 width:0%;
-border-radius:5px;
+border-radius:6px;
 transition:0.3s;
 }
 
-.small{
-font-size:14px;
-color:#ccc;
-}
+.small{font-size:14px;color:#ccc;}
 </style>
 </head>
 
@@ -96,15 +84,17 @@ color:#ccc;
 </div>
 
 <script>
+
 let allQuestions = []
-let currentQuestions = []
-let currentIndex = 0
+let questions = []
+let index = 0
 let score = 0
 let gaps = {}
-let selectedTopic = ""
+let locked = false
 
 // LOAD CSV
 async function loadQuestions(){
+
 const res = await fetch("questions.csv")
 const text = await res.text()
 
@@ -119,16 +109,18 @@ question:c[2],
 options:[c[3],c[4],c[5],c[6]],
 answer:parseInt(c[8])
 }
-}).filter(q=>q.question && q.options.length===4)
+}).filter(q=>q.question)
+
 }
 
 // START SCREEN
-function showStart(){
+function startScreen(){
 
 let topics = [...new Set(allQuestions.map(q=>q.topic))]
 
 document.getElementById("app").innerHTML = `
 <h2>Select Topic</h2>
+
 ${topics.map(t=>`
 <button onclick="startQuiz('${t}')">${t}</button>
 `).join("")}
@@ -138,12 +130,11 @@ ${topics.map(t=>`
 // START QUIZ
 function startQuiz(topic){
 
-selectedTopic = topic
-currentIndex = 0
+index = 0
 score = 0
 gaps = {}
 
-currentQuestions = allQuestions
+questions = allQuestions
 .filter(q=>q.topic === topic)
 .sort(()=>0.5 - Math.random())
 .slice(0,10)
@@ -154,35 +145,42 @@ showQuestion()
 // SHOW QUESTION
 function showQuestion(){
 
-let q = currentQuestions[currentIndex]
+let q = questions[index]
 
 document.getElementById("app").innerHTML = `
 <div class="progress">
-<div class="progress-bar" style="width:${(currentIndex/10)*100}%"></div>
+<div class="bar" style="width:${(index/questions.length)*100}%"></div>
 </div>
 
-<h3>Question ${currentIndex + 1}</h3>
+<h3>Question ${index + 1}</h3>
 <p>${q.question}</p>
 
 ${q.options.map((opt,i)=>`
-<button class="option" onclick="handleAnswer(${i}, this)">${opt}</button>
+<button class="option" onclick="answer(${i}, this)">${opt}</button>
 `).join("")}
 `
 }
 
-// HANDLE ANSWER
-function handleAnswer(selected, btn){
+// ANSWER HANDLER
+function answer(choice, btn){
 
-let q = currentQuestions[currentIndex]
+if(locked) return
+locked = true
+
+let q = questions[index]
 let correct = q.answer
 
 let buttons = document.querySelectorAll(".option")
+
 buttons.forEach(b=>b.disabled = true)
 
-if(selected === correct){
+if(choice === correct){
+
 btn.classList.add("correct")
 score++
+
 }else{
+
 btn.classList.add("wrong")
 buttons[correct].classList.add("correct")
 
@@ -191,42 +189,46 @@ gaps[q.topic] = (gaps[q.topic] || 0) + 1
 
 // AUTO NEXT
 setTimeout(()=>{
-currentIndex++
-if(currentIndex < currentQuestions.length){
+index++
+locked = false
+
+if(index < questions.length){
 showQuestion()
 }else{
 showResults()
 }
+
 },2000)
+
 }
 
 // RESULTS
 function showResults(){
 
-let weakAreas = Object.keys(gaps).length
+let weak = Object.keys(gaps).length
 ? Object.keys(gaps).join(", ")
-: "None identified"
+: "None"
 
 document.getElementById("app").innerHTML = `
-<h2>Diagnostic Complete</h2>
+<h2>Results</h2>
 
-<p><strong>Score:</strong> ${score}/10</p>
+<p><strong>Score:</strong> ${score}/${questions.length}</p>
 
-<p><strong>Focus Areas:</strong><br>${weakAreas}</p>
+<p><strong>Focus Areas:</strong><br>${weak}</p>
 
-<p class="small">Revisit these topics and try again.</p>
+<p class="small">Revise these topics and try again.</p>
 
-<button onclick="showStart()">Back to Topics</button>
+<button onclick="startScreen()">Back to Topics</button>
 `
 }
 
 // INIT
-loadQuestions().then(data=>{
-allQuestions = data
-showStart()
+loadQuestions().then(q=>{
+allQuestions = q
+startScreen()
 })
+
 </script>
 
 </body>
-
 </html>
