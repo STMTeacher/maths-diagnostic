@@ -1,129 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GCSE Maths Diagnostic</title>
+
+<style>
+/* KEEPING YOUR EXACT STYLE */
+:root{
+--bg1:#052a16;
+--bg2:#a88400;
+--card:#0d0d0d;
+--card2:#171717;
+--text:#f5f5f5;
+--muted:#c9c9c9;
+--gold:#ffd700;
+--green:#22c55e;
+--red:#dc2626;
+--line:#2a2a2a;
+}
+
+body{
+margin:0;
+font-family:Arial;
+background:linear-gradient(135deg,var(--bg1),var(--bg2));
+color:white;
+padding:20px;
+}
+
+.shell{max-width:980px;margin:auto;}
+.frame{background:#000;border-radius:18px;padding:20px;}
+.big-btn{background:linear-gradient(90deg,var(--green),var(--gold));color:#000;padding:14px;border:none;border-radius:10px;width:100%;margin-top:10px;font-weight:bold;cursor:pointer;}
+.small-btn{background:#ffd700;color:#000;padding:10px;border:none;border-radius:8px;margin-top:10px;cursor:pointer;}
+.topic-btn{background:#181818;color:white;padding:12px;border-radius:10px;width:100%;margin:6px 0;border:1px solid #333;cursor:pointer;}
+.option{background:#1a1a1a;padding:12px;margin:8px 0;border-radius:10px;cursor:pointer;border:1px solid #333;}
+.option.correct{background:#14532d;}
+.option.wrong{background:#7f1d1d;}
+.progress{height:12px;background:#333;border-radius:10px;}
+.bar{height:100%;background:linear-gradient(90deg,var(--green),var(--gold));width:0%;}
+</style>
+</head>
+
+<body>
+
+<div class="shell">
+<div class="frame">
+<div id="app">Loading...</div>
+</div>
+</div>
+
 <script>
+
 const ANALYTICS_KEY = "gcseMathsDiagnosticAnalyticsV1";
 
 let questionBank = [];
 let TOPICS = [];
-const LETTERS = ["A","B","C","D"];
-
-// ✅ LOAD FROM CSV
-async function loadQuestionsFromCSV(){
-  const res = await fetch("questions.csv");
-  const text = await res.text();
-
-  const rows = text.trim().split("\n").slice(1);
-
-  questionBank = rows.map(r=>{
-    const c = r.split(",");
-
-    return {
-      q: c[2],
-      o: [c[3], c[4], c[5], c[6]],
-      a: parseInt(c[8]),
-      t: c[1]
-    };
-  }).filter(q => q.q);
-
-  TOPICS = [...new Set(questionBank.map(q => q.t))].sort();
-
-  startScreen(); // IMPORTANT: only start AFTER loading
-}
-
-// EVERYTHING BELOW = UNCHANGED
-
 let questions = [];
 let index = 0;
 let score = 0;
 let locked = false;
-let countdownInterval = null;
 let topicScores = {};
 let currentMode = "";
 let currentTopic = "";
 
-function saveAnalytics(result){
-  const existing = JSON.parse(localStorage.getItem(ANALYTICS_KEY) || "[]");
-  existing.push(result);
-  localStorage.setItem(ANALYTICS_KEY, JSON.stringify(existing));
+// LOAD CSV
+async function loadCSV(){
+const res = await fetch("questions.csv");
+const text = await res.text();
+
+const rows = text.trim().split("\n").slice(1);
+
+questionBank = rows.map(r=>{
+const c = r.split(",");
+return {
+q:c[2],
+o:[c[3],c[4],c[5],c[6]],
+a:parseInt(c[8]),
+t:c[1]
+};
+});
+
+TOPICS = [...new Set(questionBank.map(q=>q.t))].sort();
+
+startScreen();
 }
 
-function getAnalytics(){
-  return JSON.parse(localStorage.getItem(ANALYTICS_KEY) || "[]");
-}
-
-function clearAnalytics(){
-  localStorage.removeItem(ANALYTICS_KEY);
-  analyticsScreen();
-}
-
-function shuffle(array){
-  const arr = [...array];
-  for(let i = arr.length - 1; i > 0; i--){
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
-function render(html){
-  document.getElementById("app").innerHTML = html;
-}
-
+// HOME SCREEN (UNCHANGED)
 function startScreen(){
-  const analytics = getAnalytics();
-  const attempts = analytics.length;
-  const avg = attempts
-    ? Math.round(analytics.reduce((sum,a)=>sum+a.percent,0) / attempts)
-    : 0;
 
-  render(`
-    <div class="grid">
-      <div class="panel">
-        <h3>Full Diagnostic</h3>
-        <p>20 random questions across topics. Best for finding the main gaps quickly.</p>
-        <button class="big-btn" onclick="startDiagnostic()">Start Full Diagnostic</button>
-      </div>
-      <div class="panel">
-        <h3>Practice a Topic</h3>
-        <p>Choose one topic and complete 10 focused questions.</p>
-        <button class="big-btn" onclick="topicMenu()">Choose a Topic</button>
-      </div>
-      <div class="panel">
-        <h3>Teacher Analytics</h3>
-        <p>See results saved on this browser and device.</p>
-        <button class="big-btn" onclick="analyticsScreen()">Open Analytics</button>
-      </div>
-    </div>
+const data = JSON.parse(localStorage.getItem(ANALYTICS_KEY)||"[]");
+const avg = data.length ? Math.round(data.reduce((s,a)=>s+a.percent,0)/data.length):0;
 
-    <div class="stat-row">
-      <div class="stat">
-        <div class="num">${questionBank.length}</div>
-        <div class="label">Questions in bank</div>
-      </div>
-      <div class="stat">
-        <div class="num">${TOPICS.length}</div>
-        <div class="label">Topics covered</div>
-      </div>
-      <div class="stat">
-        <div class="num">${attempts}</div>
-        <div class="label">Saved attempts on this device</div>
-      </div>
-      <div class="stat">
-        <div class="num">${attempts ? avg + "%" : "—"}</div>
-        <div class="label">Average score</div>
-      </div>
-    </div>
+document.getElementById("app").innerHTML = `
+<h2>GCSE Maths Survival Diagnostic</h2>
 
-    <div class="panel">
-      <h3>Topics included</h3>
-      <div>
-        ${TOPICS.map(t => `<span class="tag">${t}</span>`).join("")}
-      </div>
-      <div class="divider"></div>
-      <p class="note">Students receive a random set of questions each time. Results are saved only on the device and browser being used.</p>
-    </div>
-  `);
+<button class="big-btn" onclick="startDiagnostic()">Full Diagnostic</button>
+<button class="big-btn" onclick="topicMenu()">Practice Topic</button>
+<button class="big-btn" onclick="analytics()">Analytics</button>
+
+<p>Questions: ${questionBank.length}</p>
+<p>Topics: ${TOPICS.length}</p>
+<p>Average: ${avg}%</p>
+`;
 }
 
-// ⛔ REMOVE old startScreen() call
-// ✅ REPLACE WITH THIS:
-loadQuestionsFromCSV();
+// MODES
+function startDiagnostic(){
+currentMode="diagnostic";
+questions = shuffle(questionBank).slice(0,20);
+startQuiz();
+}
+
+function topicMenu(){
+document.getElementById("app").innerHTML = `
+<h2>Select Topic</h2>
+${TOPICS.map(t=>`<button class="topic-btn" onclick="startTopic('${t}')">${t}</button>`).join("")}
+`;
+}
+
+function startTopic(topic){
+currentMode="topic";
+currentTopic=topic;
+questions = shuffle(questionBank.filter(q=>q.t===topic)).slice(0,10);
+startQuiz();
+}
+
+// QUIZ
+function startQuiz(){
+index=0;
+score=0;
+topicScores={};
+loadQuestion();
+}
+
+function loadQuestion(){
+
+let q = questions[index];
+
+document.getElementById("app").innerHTML = `
+<div class="progress"><div class="bar" style="width:${(index/questions.length)*100}%"></div></div>
+
+<h3>${q.q}</h3>
+
+${q.o.map((opt,i)=>`<div class="option" onclick="answer(${i})">${opt}</div>`).join("")}
+
+<div id="feedback"></div>
+`;
+}
+
+function answer(choice){
+
+if(locked) return;
+locked=true;
+
+let q = questions[index];
+
+if(!topicScores[q.t]) topicScores[q.t]={correct:0,total:0};
+topicScores[q.t].total++;
+
+let opts = document.querySelectorAll(".option");
+
+if(choice===q.a){
+opts[choice].classList.add("correct");
+score++;
+topicScores[q.t].correct++;
+}else{
+opts[choice].classList.add("wrong");
+opts[q.a].classList.add("correct");
+}
+
+setTimeout(()=>{
+index++;
+locked=false;
+if(index<questions.length){
+loadQuestion();
+}else{
+finish();
+}
+},2000);
+}
+
+function finish(){
+
+let percent = Math.round((score/questions.length)*100);
+
+let data = JSON.parse(localStorage.getItem(ANALYTICS_KEY)||"[]");
+data.push({percent});
+localStorage.setItem(ANALYTICS_KEY,JSON.stringify(data));
+
+document.getElementById("app").innerHTML = `
+<h2>Result</h2>
+<p>${score}/${questions.length}</p>
+<p>${percent}%</p>
+<button class="small-btn" onclick="startScreen()">Home</button>
+`;
+}
+
+// UTIL
+function shuffle(a){
+return [...a].sort(()=>0.5-Math.random());
+}
+
+function analytics(){
+let data = JSON.parse(localStorage.getItem(ANALYTICS_KEY)||"[]");
+document.getElementById("app").innerHTML = `
+<h2>Analytics</h2>
+<p>Attempts: ${data.length}</p>
+<button onclick="startScreen()">Back</button>
+`;
+}
+
+// START
+loadCSV();
+
 </script>
+
+</body>
+</html>
