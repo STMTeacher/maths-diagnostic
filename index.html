@@ -1,242 +1,424 @@
 <script>
+    const ANALYTICS_KEY = "gcseMathsDiagnosticAnalyticsV1";
+    
+    // IMPORTANT: Replace these with your actual GitHub details
+    // Use the "Raw" link format so the browser gets the text, not the GitHub UI
+    const CSV_URL = "https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME/main/questions.csv";
 
-const ANALYTICS_KEY = "gcseMathsDiagnosticAnalyticsV1";
+    const LETTERS = ["A","B","C","D"];
 
-let questionBank = [];
-let TOPICS = [];
-const LETTERS = ["A","B","C","D"];
+    let questionBank = []; // Starts empty, filled by CSV
+    let TOPICS = [];
+    let questions = [];
+    let index = 0;
+    let score = 0;
+    let locked = false;
+    let countdownInterval = null;
+    let topicScores = {};
+    let currentMode = "";
+    let currentTopic = "";
 
-let questions = [];
-let index = 0;
-let score = 0;
-let locked = false;
-let countdownInterval = null;
-let topicScores = {};
-let currentMode = "";
-let currentTopic = "";
+    // --- NEW: CSV LOADING LOGIC ---
+    async function loadQuestionsFromCSV() {
+        try {
+            render(`<div class="panel"><h3>Loading Questions...</h3></div>`);
+            const response = await fetch(CSV_URL);
+            const data = await response.text();
+            
+            // Split by lines and filter out empty lines
+            const rows = data.split('\n').filter(row => row.trim() !== '');
+            
+            questionBank = rows.map(row => {
+                // Split by comma (handles basic CSVs)
+                const cols = row.split(',');
+                return {
+                    q: cols[0].trim(),
+                    o: [cols[1].trim(), cols[2].trim(), cols[3].trim(), cols[4].trim()],
+                    a: parseInt(cols[5]),
+                    t: cols[6].trim()
+                };
+            });
 
-// LOAD CSV
-async function loadQuestionsFromCSV(){
-  const res = await fetch("questions.csv");
-  const text = await res.text();
+            TOPICS = [...new Set(questionBank.map(q => q.t))].sort();
+            startScreen(); // Only start the app once data is ready
 
-  const rows = text.trim().split("\n").slice(1);
+        } catch (error) {
+            console.error("Error loading CSV:", error);
+            render(`<div class="panel"><h3>Error loading questions.</h3><p>Check the CSV URL and GitHub repository access.</p></div>`);
+        }
+    }
 
-  questionBank = rows.map(r=>{
-    const c = r.split(",");
-    return {
-      q: c[2],
-      o: [c[3], c[4], c[5], c[6]],
-      a: parseInt(c[8]),
-      t: c[1]
-    };
-  }).filter(q => q.q);
+    // --- ANALYTICS & UTILS ---
+    function saveAnalytics(result){
+      const existing = JSON.parse(localStorage.getItem(ANALYTICS_KEY) || "[]");
+      existing.push(result);
+      localStorage.setItem(ANALYTICS_KEY, JSON.stringify(existing));
+    }
 
-  TOPICS = [...new Set(questionBank.map(q => q.t))].sort();
+    function getAnalytics(){
+      return JSON.parse(localStorage.getItem(ANALYTICS_KEY) || "[]");
+    }
 
-  startScreen();
-}
+    function clearAnalytics(){
+      localStorage.removeItem(ANALYTICS_KEY);
+      analyticsScreen();
+    }
 
-// UTIL
-function shuffle(array){
-  const arr = [...array];
-  for(let i = arr.length - 1; i > 0; i--){
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
+    function shuffle(array){
+      const arr = [...array];
+      for(let i = arr.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
 
-function render(html){
-  document.getElementById("app").innerHTML = html;
-}
+    function render(html){
+      document.getElementById("app").innerHTML = html;
+    }
 
-// HOME SCREEN (UNCHANGED)
-function startScreen(){
-  const analytics = JSON.parse(localStorage.getItem(ANALYTICS_KEY) || "[]");
-  const attempts = analytics.length;
-  const avg = attempts
-    ? Math.round(analytics.reduce((sum,a)=>sum+a.percent,0) / attempts)
-    : 0;
+    // --- NAVIGATION & SCREENS ---
+    function startScreen(){
+      const analytics = getAnalytics();
+      const attempts = analytics.length;
+      const avg = attempts
+        ? Math.round(analytics.reduce((sum,a)=>sum+a.percent,0) / attempts)
+        : 0;
 
-  render(`
-    <div class="grid">
-      <div class="panel">
-        <h3>Full Diagnostic</h3>
-        <p>20 random questions across topics.</p>
-        <button class="big-btn" onclick="startDiagnostic()">Start Full Diagnostic</button>
-      </div>
-
-      <div class="panel">
-        <h3>Practice a Topic</h3>
-        <button class="big-btn" onclick="topicMenu()">Choose a Topic</button>
-      </div>
-
-      <div class="panel">
-        <h3>Teacher Analytics</h3>
-        <button class="big-btn" onclick="analyticsScreen()">Open Analytics</button>
-      </div>
-    </div>
-
-    <div class="stat-row">
-      <div class="stat"><div class="num">${questionBank.length}</div><div class="label">Questions</div></div>
-      <div class="stat"><div class="num">${TOPICS.length}</div><div class="label">Topics</div></div>
-      <div class="stat"><div class="num">${attempts}</div><div class="label">Attempts</div></div>
-      <div class="stat"><div class="num">${attempts ? avg+"%" : "-"}</div><div class="label">Average</div></div>
-    </div>
-  `);
-}
-
-// MODES
-function startDiagnostic(){
-  currentMode = "diagnostic";
-  currentTopic = "";
-  questions = shuffle(questionBank).slice(0,20);
-  startQuiz();
-}
-
-function topicMenu(){
-  render(`
-    <div class="panel">
-      <h2>Select Topic</h2>
-      ${TOPICS.map(t=>`<button class="topic-btn" onclick="startTopic('${t}')">${t}</button>`).join("")}
-      <button class="small-btn" onclick="startScreen()">Back</button>
-    </div>
-  `);
-}
-
-function startTopic(topic){
-  currentMode = "topic";
-  currentTopic = topic;
-  const topicQs = questionBank.filter(q=>q.t===topic);
-  questions = shuffle(topicQs).slice(0,10);
-  startQuiz();
-}
-
-// QUIZ
-function startQuiz(){
-  index = 0;
-  score = 0;
-  topicScores = {};
-  locked = false;
-  clearInterval(countdownInterval);
-  loadQuestion();
-}
-
-function loadQuestion(){
-  const q = questions[index];
-
-  render(`
-    <div class="progress-wrap">
-      <div class="progress"><div class="bar" style="width:${(index/questions.length)*100}%"></div></div>
-    </div>
-
-    <div class="question-card">
-      <div class="q-topic">${q.t}</div>
-      <h2 class="question">${q.q}</h2>
-
-      ${q.o.map((opt,i)=>`
-        <div class="option" id="opt${i}" onclick="answer(${i})">
-          <span class="option-letter">${LETTERS[i]}</span>
-          ${opt}
+      render(`
+        <div class="grid">
+          <div class="panel">
+            <h3>Full Diagnostic</h3>
+            <p>20 random questions across topics. Best for finding the main gaps quickly.</p>
+            <button class="big-btn" onclick="startDiagnostic()">Start Full Diagnostic</button>
+          </div>
+          <div class="panel">
+            <h3>Practice a Topic</h3>
+            <p>Choose one topic and complete 10 focused questions.</p>
+            <button class="big-btn" onclick="topicMenu()">Choose a Topic</button>
+          </div>
+          <div class="panel">
+            <h3>Teacher Analytics</h3>
+            <p>See results saved on this browser and device.</p>
+            <button class="big-btn" onclick="analyticsScreen()">Open Analytics</button>
+          </div>
         </div>
-      `).join("")}
 
-      <div id="feedback" class="feedback"></div>
+        <div class="stat-row">
+          <div class="stat">
+            <div class="num">${questionBank.length}</div>
+            <div class="label">Questions in bank</div>
+          </div>
+          <div class="stat">
+            <div class="num">${TOPICS.length}</div>
+            <div class="label">Topics covered</div>
+          </div>
+          <div class="stat">
+            <div class="num">${attempts}</div>
+            <div class="label">Saved attempts on this device</div>
+          </div>
+          <div class="stat">
+            <div class="num">${attempts ? avg + "%" : "—"}</div>
+            <div class="label">Average score</div>
+          </div>
+        </div>
 
-      <button class="small-btn" onclick="startScreen()">Exit</button>
-    </div>
-  `);
-}
+        <div class="panel">
+          <h3>Topics included</h3>
+          <div>
+            ${TOPICS.map(t => `<span class="tag">${t}</span>`).join("")}
+          </div>
+          <div class="divider"></div>
+          <p class="note">Students receive a random set of questions each time. Results are saved only on the device and browser being used.</p>
+        </div>
+      `);
+    }
 
-// ✅ FIXED ANSWER FUNCTION
-function answer(choice){
-  if(locked) return;
-  locked = true;
+    function startDiagnostic(){
+      currentMode = "diagnostic";
+      currentTopic = "";
+      questions = shuffle(questionBank).slice(0, 20);
+      startQuiz();
+    }
 
-  const q = questions[index];
+    function topicMenu(){
+      render(`
+        <div class="panel">
+          <h2>Select a Topic</h2>
+          <p class="muted">Each topic practice uses 10 random questions from that topic.</p>
+          ${TOPICS.map(topic => `<button class="topic-btn" onclick="startTopic('${topic.replace(/'/g, "\\'")}')">${topic}</button>`).join("")}
+          <div class="actions">
+            <button class="small-btn ghost-btn" onclick="startScreen()">Back</button>
+          </div>
+        </div>
+      `);
+    }
 
-  if(!topicScores[q.t]){
-    topicScores[q.t] = { correct:0, total:0 };
-  }
-  topicScores[q.t].total++;
+    function startTopic(topic){
+      currentMode = "topic";
+      currentTopic = topic;
+      const topicQuestions = questionBank.filter(q => q.t === topic);
+      questions = shuffle(topicQuestions).slice(0, Math.min(10, topicQuestions.length));
+      startQuiz();
+    }
 
-  const options = document.querySelectorAll(".option");
-  const feedback = document.getElementById("feedback");
+    function startQuiz(){
+      index = 0;
+      score = 0;
+      locked = false;
+      topicScores = {};
+      clearInterval(countdownInterval);
+      loadQuestion();
+    }
 
-  options.forEach(opt=>opt.style.pointerEvents="none");
+    function progressPercent(){
+      return Math.round((index / questions.length) * 100);
+    }
 
-  if(choice === q.a){
-    score++;
-    topicScores[q.t].correct++;
-    options[choice].classList.add("correct");
-    feedback.className = "feedback correct";
-    feedback.innerHTML = `✅ Correct <span id="countdown"></span>`;
-  } else {
-    options[choice].classList.add("wrong");
-    options[q.a].classList.add("correct");
-    feedback.className = "feedback wrong";
-    feedback.innerHTML = `❌ Incorrect <span id="countdown"></span>`;
-  }
+    function loadQuestion(){
+      const q = questions[index];
+      render(`
+        <div class="progress-wrap">
+          <div class="progress-meta">
+            <span>${currentMode === "topic" ? "Topic Practice" : "Full Diagnostic"}${currentTopic ? " · " + currentTopic : ""}</span>
+            <span>Question ${index + 1} of ${questions.length}</span>
+          </div>
+          <div class="progress">
+            <div class="bar" style="width:${progressPercent()}%"></div>
+          </div>
+        </div>
 
-  let time = 3;
-  const cd = document.getElementById("countdown");
-  cd.textContent = `· Next in ${time}s`;
+        <div class="question-card">
+          <div class="q-topic">${q.t}</div>
+          <h2 class="question">${q.q}</h2>
 
-  countdownInterval = setInterval(()=>{
-    time--;
-    if(time>0) cd.textContent = `· Next in ${time}s`;
-  },1000);
+          <div id="optionsWrap">
+            ${q.o.map((opt, i) => `
+              <div class="option" id="opt${i}" onclick="answer(${i})">
+                <span class="option-letter">${LETTERS[i]}</span>
+                <span>${opt}</span>
+              </div>
+            `).join("")}
+          </div>
 
-  setTimeout(()=>{
-    clearInterval(countdownInterval);
-    nextQuestion();
-  },3000);
-}
+          <div id="feedback" class="feedback"></div>
 
-function nextQuestion(){
-  index++;
-  locked = false;
+          <div class="actions">
+            <button class="small-btn ghost-btn" onclick="startScreen()">Exit to Home</button>
+          </div>
+        </div>
+      `);
+    }
 
-  if(index < questions.length){
-    loadQuestion();
-  } else {
-    finishQuiz();
-  }
-}
+    function answer(choice){
+      if(locked) return;
+      locked = true;
 
-// RESULTS
-function finishQuiz(){
-  const percent = Math.round((score/questions.length)*100);
+      const q = questions[index];
+      if(!topicScores[q.t]){
+        topicScores[q.t] = { correct: 0, total: 0 };
+      }
+      topicScores[q.t].total++;
 
-  const data = JSON.parse(localStorage.getItem(ANALYTICS_KEY)||"[]");
-  data.push({percent});
-  localStorage.setItem(ANALYTICS_KEY,JSON.stringify(data));
+      const selected = document.getElementById("opt" + choice);
+      const correct = document.getElementById("opt" + q.a);
+      const feedbackEl = document.getElementById("feedback");
 
-  render(`
-    <div class="panel">
-      <h2>Results</h2>
-      <p>${score}/${questions.length}</p>
-      <p>${percent}%</p>
-      <button class="small-btn" onclick="startScreen()">Home</button>
-    </div>
-  `);
-}
+      if(choice === q.a){
+        score++;
+        topicScores[q.t].correct++;
+        selected.classList.add("correct");
+        feedbackEl.className = "feedback correct";
+        feedbackEl.innerHTML = `✅ Correct <span class="countdown" id="countdown"></span>`;
+      } else {
+        selected.classList.add("wrong");
+        correct.classList.add("correct");
+        feedbackEl.className = "feedback wrong";
+        feedbackEl.innerHTML = `❌ Incorrect <span class="countdown" id="countdown"></span>`;
+      }
 
-// ANALYTICS
-function analyticsScreen(){
-  const data = JSON.parse(localStorage.getItem(ANALYTICS_KEY)||"[]");
+      let remaining = 3;
+      const countdownEl = document.getElementById("countdown");
+      countdownEl.textContent = `· Next question in ${remaining}s`;
 
-  render(`
-    <div class="panel">
-      <h2>Analytics</h2>
-      <p>Attempts: ${data.length}</p>
-      <button class="small-btn" onclick="startScreen()">Back</button>
-    </div>
-  `);
-}
+      countdownInterval = setInterval(() => {
+        remaining--;
+        if(remaining > 0){
+          countdownEl.textContent = `· Next question in ${remaining}s`;
+        }
+      }, 1000);
 
-// START APP
-loadQuestionsFromCSV();
+      setTimeout(() => {
+        clearInterval(countdownInterval);
+        nextQuestion();
+      }, 3000);
+    }
 
-</script>
+    function nextQuestion(){
+      index++;
+      locked = false;
+      clearInterval(countdownInterval);
+
+      if(index < questions.length){
+        loadQuestion();
+      } else {
+        finishQuiz();
+      }
+    }
+
+    function finishQuiz(){
+      const percent = Math.round((score / questions.length) * 100);
+
+      const topicPercentages = Object.keys(topicScores).map(topic => {
+        const data = topicScores[topic];
+        return {
+          topic,
+          percent: Math.round((data.correct / data.total) * 100),
+          correct: data.correct,
+          total: data.total
+        };
+      }).sort((a,b) => a.topic.localeCompare(b.topic));
+
+      const weak = topicPercentages.filter(x => x.percent < 60).sort((a,b) => a.percent - b.percent);
+
+      saveAnalytics({
+        date: new Date().toISOString(),
+        mode: currentMode,
+        selectedTopic: currentTopic,
+        percent,
+        score,
+        total: questions.length,
+        topics: topicPercentages
+      });
+
+      render(`
+        <div class="panel">
+          <h2>Student Report</h2>
+          <div class="stat-row">
+            <div class="stat">
+              <div class="num">${score}/${questions.length}</div>
+              <div class="label">Questions correct</div>
+            </div>
+            <div class="stat">
+              <div class="num">${percent}%</div>
+              <div class="label">Overall score</div>
+            </div>
+            <div class="stat">
+              <div class="num">${currentMode === "topic" ? currentTopic : "Mixed"}</div>
+              <div class="label">Mode</div>
+            </div>
+          </div>
+
+          <h3>Topic Mastery</h3>
+          ${topicPercentages.map(item => `
+            <div class="topic-line">
+              <div class="topic-label">
+                <span>${item.topic}</span>
+                <span>${item.percent}% (${item.correct}/${item.total})</span>
+              </div>
+              <div class="topic-bar">
+                <div class="topic-fill" style="width:${item.percent}%"></div>
+              </div>
+            </div>
+          `).join("")}
+
+          <div class="divider"></div>
+
+          <h3>Priority Revision</h3>
+          ${
+            weak.length
+              ? `<ul class="list">${weak.map(w => `<li>${w.topic}</li>`).join("")}</ul>`
+              : `<p class="muted">No major gaps detected in this attempt.</p>`
+          }
+
+          <div class="actions">
+            <button class="small-btn" onclick="startScreen()">Home</button>
+            <button class="small-btn" onclick="${currentMode === "topic" ? `startTopic('${currentTopic.replace(/'/g, "\\'")}')` : "startDiagnostic()"}">Try Again</button>
+            <button class="small-btn ghost-btn" onclick="analyticsScreen()">View Analytics</button>
+          </div>
+        </div>
+      `);
+    }
+
+    function analyticsScreen(){
+      const data = getAnalytics();
+
+      if(!data.length){
+        render(`
+          <div class="panel">
+            <h2>Teacher Analytics</h2>
+            <p class="muted">No saved attempts yet on this device.</p>
+            <div class="actions">
+              <button class="small-btn ghost-btn" onclick="startScreen()">Back</button>
+            </div>
+          </div>
+        `);
+        return;
+      }
+
+      const attempts = data.length;
+      const avg = Math.round(data.reduce((sum, x) => sum + x.percent, 0) / attempts);
+      const latest = data[data.length - 1].percent;
+
+      const topicMap = {};
+      data.forEach(attempt => {
+        attempt.topics.forEach(t => {
+          if(!topicMap[t.topic]){
+            topicMap[t.topic] = { totalPercent: 0, count: 0, weakCount: 0 };
+          }
+          topicMap[t.topic].totalPercent += t.percent;
+          topicMap[t.topic].count += 1;
+          if(t.percent < 60) topicMap[t.topic].weakCount += 1;
+        });
+      });
+
+      const topicSummary = Object.keys(topicMap).map(topic => ({
+        topic,
+        avg: Math.round(topicMap[topic].totalPercent / topicMap[topic].count),
+        weakCount: topicMap[topic].weakCount,
+        count: topicMap[topic].count
+      })).sort((a,b) => a.avg - b.avg);
+
+      render(`
+        <div class="panel">
+          <h2>Teacher Analytics</h2>
+          <p class="note">These results come from this browser on this device only.</p>
+
+          <div class="stat-row">
+            <div class="stat">
+              <div class="num">${attempts}</div>
+              <div class="label">Saved attempts</div>
+            </div>
+            <div class="stat">
+              <div class="num">${avg}%</div>
+              <div class="label">Average score</div>
+            </div>
+            <div class="stat">
+              <div class="num">${latest}%</div>
+            </div>
+          </div>
+
+          <h3>Weakest Topics</h3>
+          ${topicSummary.map(item => `
+            <div class="topic-line">
+              <div class="topic-label">
+                <span>${item.topic}</span>
+                <span>${item.avg}% average · weak in ${item.weakCount} attempt(s)</span>
+              </div>
+              <div class="topic-bar">
+                <div class="topic-fill" style="width:${item.avg}%"></div>
+              </div>
+            </div>
+          `).join("")}
+
+          <div class="actions">
+            <button class="small-btn ghost-btn" onclick="startScreen()">Back</button>
+            <button class="small-btn danger-btn" onclick="clearAnalytics()">Clear Analytics</button>
+          </div>
+        </div>
+      `);
+    }
+
+    // --- INITIALIZE ---
+    loadQuestionsFromCSV();
+  </script>
