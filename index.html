@@ -866,7 +866,7 @@
       app.innerHTML = `
         <div class="panel content-card">
           <h2>Practice by topic</h2>
-          <p class="muted">Only topics found in the CSV file are shown here. If you later add a <strong>Subtopic</strong> column, those can also be used automatically.</p>
+          <p class="muted">Common topics found in Foundation GCSE maths are shown here. I add more later to help you <strong>Subtopic</strong> .</p>
           <div class="topic-grid">
             ${topics.map(item => {
               const subs = [...new Set(state.activeQuestions.filter(q => q.Topic === item.topic && q.Subtopic).map(q => q.Subtopic))].sort();
