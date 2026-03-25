@@ -3,898 +3,1088 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GCSE Maths Diagnostic</title>
+  <title>Maths Diagnostic Tool</title>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
-    :root{
-      --bg1:#052a16;
-      --bg2:#a88400;
-      --card:#0d0d0d;
-      --card2:#171717;
-      --text:#f5f5f5;
-      --muted:#c9c9c9;
-      --gold:#ffd700;
-      --gold2:#c9a227;
-      --green:#22c55e;
-      --red:#dc2626;
-      --line:#2a2a2a;
+    :root {
+      --bg-1: #050505;
+      --bg-2: #0d0d0d;
+      --panel: rgba(255,255,255,0.08);
+      --panel-strong: rgba(255,255,255,0.12);
+      --border: rgba(255,255,255,0.14);
+      --text: #f4f7f2;
+      --muted: #b7c0b4;
+      --green-1: #32d74b;
+      --green-2: #0cbf72;
+      --yellow-1: #ffe66d;
+      --yellow-2: #ffb703;
+      --danger: #ff5f57;
+      --ok: #30d158;
+      --shadow: 0 12px 40px rgba(0,0,0,0.35);
+      --radius: 22px;
     }
 
-    *{box-sizing:border-box}
+    * { box-sizing: border-box; }
 
-    body{
-      margin:0;
-      font-family:Arial, Helvetica, sans-serif;
-      color:var(--text);
-      background:linear-gradient(135deg,var(--bg1),var(--bg2));
-      min-height:100vh;
-      padding:20px;
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(50,215,75,0.12), transparent 30%),
+        radial-gradient(circle at top right, rgba(255,183,3,0.10), transparent 28%),
+        linear-gradient(180deg, var(--bg-1), var(--bg-2));
+      min-height: 100vh;
     }
 
-    .shell{
-      max-width:980px;
-      margin:0 auto;
+    .app-shell {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px;
     }
 
-    .frame{
-      background:rgba(0,0,0,.88);
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:18px;
-      box-shadow:0 20px 40px rgba(0,0,0,.35);
-      overflow:hidden;
+    .hero {
+      display: grid;
+      grid-template-columns: 1.3fr 0.9fr;
+      gap: 18px;
+      margin-bottom: 18px;
     }
 
-    .topbar{
-      padding:18px 22px;
-      border-bottom:1px solid var(--line);
-      background:linear-gradient(90deg, rgba(255,215,0,.08), rgba(34,197,94,.08));
+    .panel {
+      background: var(--panel);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
     }
 
-    .brand{
-      margin:0;
-      font-size:clamp(1.5rem, 2.3vw, 2.2rem);
-      text-align:center;
-      letter-spacing:.3px;
+    .hero-card,
+    .tracker-card,
+    .content-card,
+    .topic-card,
+    .stat-card,
+    .question-card,
+    .results-card,
+    .revision-card {
+      padding: 22px;
     }
 
-    .subtitle{
-      margin:8px 0 0;
-      text-align:center;
-      color:var(--muted);
-      font-size:.98rem;
+    h1, h2, h3, h4, p { margin-top: 0; }
+    h1 { font-size: 2rem; letter-spacing: 0.2px; }
+    h2 { font-size: 1.35rem; }
+    h3 { font-size: 1.05rem; }
+    .muted { color: var(--muted); }
+
+    .button-row,
+    .topic-grid,
+    .subtopic-grid,
+    .stats-grid,
+    .results-grid,
+    .revision-grid,
+    .top-nav {
+      display: grid;
+      gap: 12px;
     }
 
-    .content{
-      padding:22px;
+    .button-row {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      margin-top: 18px;
     }
 
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-      gap:14px;
+    .top-nav {
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      margin-bottom: 18px;
     }
 
-    .panel{
-      background:var(--card2);
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:18px;
+    .topic-grid,
+    .subtopic-grid,
+    .results-grid,
+    .revision-grid {
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     }
 
-    .panel h3{
-      margin:0 0 10px;
-      font-size:1.05rem;
+    .stats-grid {
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      margin-top: 16px;
     }
 
-    .panel p{
-      margin:0;
-      color:var(--muted);
-      line-height:1.45;
-      font-size:.95rem;
+    .glass-btn,
+    .nav-btn,
+    .answer-btn,
+    .ghost-btn,
+    .chip-btn,
+    .small-btn {
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 18px;
+      color: #101410;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.20);
     }
 
-    .big-btn, .small-btn, .topic-btn{
-      border:none;
-      border-radius:12px;
-      cursor:pointer;
-      font-weight:700;
-      transition:.18s ease;
+    .glass-btn,
+    .nav-btn,
+    .answer-btn,
+    .chip-btn,
+    .small-btn {
+      background: linear-gradient(135deg, var(--yellow-1), var(--green-1));
     }
 
-    .big-btn{
-      width:100%;
-      padding:14px 16px;
-      margin-top:14px;
-      background:linear-gradient(90deg,var(--green),var(--gold));
-      color:#000;
-      font-size:1rem;
+    .glass-btn {
+      padding: 16px 18px;
+      min-height: 70px;
+      font-size: 1rem;
+      text-align: left;
     }
 
-    .big-btn:hover,
-    .small-btn:hover,
-    .topic-btn:hover{
-      transform:translateY(-1px);
-      filter:brightness(1.04);
+    .nav-btn,
+    .ghost-btn,
+    .small-btn {
+      padding: 12px 14px;
+      font-size: 0.95rem;
     }
 
-    .small-btn{
-      padding:11px 14px;
-      background:var(--gold);
-      color:#000;
-      font-size:.95rem;
-      margin:6px 8px 0 0;
+    .answer-btn {
+      width: 100%;
+      padding: 16px;
+      text-align: left;
+      font-size: 1rem;
+      margin-top: 10px;
     }
 
-    .ghost-btn{
-      background:#222;
-      color:#fff;
-      border:1px solid #333;
+    .ghost-btn {
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
     }
 
-    .danger-btn{
-      background:#7f1d1d;
-      color:#fff;
+    .chip-btn {
+      padding: 12px 14px;
+      text-align: left;
+      color: #0f140f;
     }
 
-    .topic-btn{
-      width:100%;
-      text-align:left;
-      padding:14px 14px;
-      margin:8px 0;
-      background:#181818;
-      color:#fff;
-      border:1px solid #2c2c2c;
-      font-size:.98rem;
+    .glass-btn:hover,
+    .nav-btn:hover,
+    .answer-btn:hover,
+    .ghost-btn:hover,
+    .chip-btn:hover,
+    .small-btn:hover {
+      transform: translateY(-2px);
     }
 
-    .stat-row{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-      gap:12px;
-      margin:14px 0 18px;
+    .glass-btn:disabled,
+    .nav-btn:disabled,
+    .answer-btn:disabled,
+    .ghost-btn:disabled,
+    .chip-btn:disabled,
+    .small-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
     }
 
-    .stat{
-      background:#151515;
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:16px;
-      text-align:center;
+    .kicker {
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      color: var(--yellow-1);
+      font-size: 0.85rem;
+      margin-bottom: 12px;
     }
 
-    .stat .num{
-      font-size:1.5rem;
-      font-weight:700;
-      color:var(--gold);
+    .stat-card {
+      background: var(--panel-strong);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
     }
 
-    .stat .label{
-      margin-top:6px;
-      color:var(--muted);
-      font-size:.92rem;
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin: 6px 0;
     }
 
-    .progress-wrap{
-      margin:8px 0 18px;
+    .progress-wrap {
+      width: 100%;
+      height: 14px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 10px 0 0;
+      border: 1px solid rgba(255,255,255,0.08);
     }
 
-    .progress-meta{
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      font-size:.94rem;
-      color:var(--muted);
-      margin-bottom:8px;
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--yellow-2), var(--green-1));
+      width: 0%;
+      transition: width 0.2s ease;
     }
 
-    .progress{
-      height:16px;
-      background:#2a2a2a;
-      border-radius:999px;
-      overflow:hidden;
+    .question-meta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
     }
 
-    .bar{
-      height:100%;
-      width:0%;
-      background:linear-gradient(90deg,var(--green),var(--gold));
-      transition:width .25s ease;
+    .pill {
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.86rem;
+      color: var(--muted);
     }
 
-    .question-card{
-      background:#111;
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:20px;
+    .feedback {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      min-height: 54px;
     }
 
-    .q-topic{
-      display:inline-block;
-      padding:6px 10px;
-      border-radius:999px;
-      background:rgba(255,215,0,.12);
-      color:#ffe88a;
-      font-size:.82rem;
-      margin-bottom:12px;
-      border:1px solid rgba(255,215,0,.18);
+    .ok { color: var(--ok); }
+    .bad { color: var(--danger); }
+
+    .table-like {
+      display: grid;
+      gap: 10px;
     }
 
-    .question{
-      font-size:1.28rem;
-      line-height:1.4;
-      margin:0 0 16px;
+    .row-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 16px;
+      padding: 14px;
     }
 
-    .option{
-      background:#1a1a1a;
-      border:1px solid #2f2f2f;
-      border-radius:14px;
-      padding:14px 14px;
-      margin:10px 0;
-      cursor:pointer;
-      transition:.18s ease;
-      display:flex;
-      align-items:center;
-      gap:12px;
+    .row-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 8px;
     }
 
-    .option:hover{
-      background:#222;
+    .mini {
+      font-size: 0.84rem;
+      color: var(--muted);
     }
 
-    .option-letter{
-      width:32px;
-      height:32px;
-      border-radius:50%;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      background:#2a2a2a;
-      font-weight:700;
-      flex:0 0 32px;
+    .secure {
+      color: var(--ok);
+      font-weight: 700;
     }
 
-    .option.correct{
-      background:rgba(34,197,94,.18);
-      border-color:rgba(34,197,94,.6);
+    .needs-work {
+      color: var(--yellow-1);
+      font-weight: 700;
     }
 
-    .option.wrong{
-      background:rgba(220,38,38,.18);
-      border-color:rgba(220,38,38,.6);
+    .danger-text {
+      color: #ffb4ad;
+      font-weight: 700;
     }
 
-    .feedback{
-      margin-top:12px;
-      min-height:28px;
-      font-weight:700;
-      font-size:1rem;
+    .empty-state {
+      padding: 24px;
+      border: 1px dashed rgba(255,255,255,0.18);
+      border-radius: 18px;
+      color: var(--muted);
+      text-align: center;
     }
 
-    .feedback.correct{
-      color:#98f0b7;
+    .rendered-html sup {
+      font-size: 0.75em;
+      vertical-align: super;
+      line-height: 0;
     }
 
-    .feedback.wrong{
-      color:#ff9f9f;
+    .rendered-html sub {
+      font-size: 0.75em;
+      vertical-align: sub;
+      line-height: 0;
     }
 
-    .countdown{
-      color:var(--muted);
-      font-weight:400;
-      margin-left:8px;
-    }
-
-    .topic-line{
-      margin:14px 0 16px;
-    }
-
-    .topic-label{
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      font-size:.95rem;
-      margin-bottom:6px;
-    }
-
-    .topic-bar{
-      height:14px;
-      background:#2b2b2b;
-      border-radius:999px;
-      overflow:hidden;
-    }
-
-    .topic-fill{
-      height:100%;
-      width:0%;
-      background:linear-gradient(90deg,var(--green),var(--gold));
-    }
-
-    .list{
-      margin:10px 0 0;
-      padding-left:18px;
-      color:var(--muted);
-    }
-
-    .muted{
-      color:var(--muted);
-    }
-
-    .actions{
-      margin-top:16px;
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-    }
-
-    .tag{
-      display:inline-block;
-      background:#222;
-      border:1px solid #333;
-      padding:8px 10px;
-      border-radius:999px;
-      margin:5px 8px 0 0;
-      color:#f1f1f1;
-      font-size:.9rem;
-    }
-
-    .divider{
-      height:1px;
-      background:var(--line);
-      margin:18px 0;
-    }
-
-    .note{
-      font-size:.9rem;
-      color:var(--muted);
-      line-height:1.45;
-    }
-
-    @media (max-width:640px){
-      .content{padding:16px}
-      .question{font-size:1.12rem}
-      .option{padding:12px}
-      .brand{font-size:1.45rem}
+    @media (max-width: 960px) {
+      .hero { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <div class="shell">
-    <div class="frame">
-      <div class="topbar">
-        <h1 class="brand">GCSE Maths Survival Diagnostic</h1>
-        <p class="subtitle">Find gaps. Practise specific topics. Track progress on this device.</p>
-      </div>
-      <div class="content">
-        <div id="app"></div>
-      </div>
-    </div>
+  <div class="app-shell">
+    <div class="top-nav" id="topNav"></div>
+    <div id="app"></div>
   </div>
 
   <script>
-    const ANALYTICS_KEY = "gcseMathsDiagnosticAnalyticsV1";
+    const CSV_FILE = "questions.csv";
+    const STORAGE_KEY = "mathsDiagnosticProgress_v1";
 
-    const questionBank = [
-      // Measurement
-      {q:"How many minutes are in one hour?",o:["60","100","30","24"],a:0,t:"Measurement"},
-      {q:"How many centimetres are in one metre?",o:["10","100","1000","10000"],a:1,t:"Measurement"},
-      {q:"300 centimetres equals how many metres?",o:["0.3","3","30","300"],a:1,t:"Measurement"},
-      {q:"How many grams are in one kilogram?",o:["100","1000","10","10000"],a:1,t:"Measurement"},
-      {q:"2500 grams equals how many kilograms?",o:["0.25","2.5","25","250"],a:1,t:"Measurement"},
-      {q:"How many millimetres are in one centimetre?",o:["100","1","10","1000"],a:2,t:"Measurement"},
-      {q:"1000 metres equals",o:["1 kilometre","10 kilometres","100 kilometres","0.1 kilometre"],a:0,t:"Measurement"},
-      {q:"5000 millilitres equals",o:["50 litres","5 litres","0.5 litres","500 litres"],a:1,t:"Measurement"},
-      {q:"90 minutes equals",o:["1 hour 10 minutes","1 hour 20 minutes","1 hour 30 minutes","2 hours"],a:2,t:"Measurement"},
-      {q:"0.75 kilograms equals",o:["75 grams","750 grams","7500 grams","7.5 grams"],a:1,t:"Measurement"},
+    const state = {
+      allQuestions: [],
+      activeQuestions: [],
+      topics: [],
+      subtopics: [],
+      view: "loading",
+      currentQuestions: [],
+      currentIndex: 0,
+      currentMode: null,
+      selectedTopic: null,
+      selectedSubtopic: null,
+      timedMode: false,
+      timerSeconds: 0,
+      timerHandle: null,
+      questionLocked: false,
+      sessionScore: 0,
+      sessionCorrect: 0,
+      sessionWrong: 0,
+      timedOut: false,
+      progress: loadProgress(),
+      lastDiagnosticSummary: null
+    };
 
-      // Decimals
-      {q:"Which number is largest?",o:["0.56","0.65","0.605","0.6"],a:1,t:"Decimals"},
-      {q:"Which number is smallest?",o:["0.8","0.75","0.82","0.805"],a:1,t:"Decimals"},
-      {q:"4.2 × 3 equals",o:["12.6","7.2","42","1.26"],a:0,t:"Decimals"},
-      {q:"7.5 ÷ 5 equals",o:["0.75","1.5","2.5","15"],a:1,t:"Decimals"},
-      {q:"0.2 + 0.35 equals",o:["0.55","0.37","0.535","0.205"],a:0,t:"Decimals"},
-      {q:"Which number is largest?",o:["0.91","0.9","0.89","0.909"],a:0,t:"Decimals"},
-      {q:"3.6 ÷ 6 equals",o:["6","0.6","0.06","1.6"],a:1,t:"Decimals"},
-      {q:"0.4 × 10 equals",o:["4","0.04","40","0.4"],a:0,t:"Decimals"},
-      {q:"Which number is smallest?",o:["0.24","0.2","0.205","0.25"],a:1,t:"Decimals"},
-      {q:"1.2 + 0.8 equals",o:["1","2","2.8","0.4"],a:1,t:"Decimals"},
-
-      // Percentages
-      {q:"10% of 80 equals",o:["8","80","0.8","16"],a:0,t:"Percentages"},
-      {q:"10% of 250 equals",o:["25","2.5","250","0.25"],a:0,t:"Percentages"},
-      {q:"0.45 written as a percentage",o:["4.5%","45%","450%","0.45%"],a:1,t:"Percentages"},
-      {q:"0.7 written as a percentage",o:["7%","70%","700%","0.07%"],a:1,t:"Percentages"},
-      {q:"50% of 40 equals",o:["20","25","10","30"],a:0,t:"Percentages"},
-      {q:"20% of 50 equals",o:["5","10","20","25"],a:1,t:"Percentages"},
-      {q:"5% of 80 equals",o:["2","4","8","16"],a:1,t:"Percentages"},
-      {q:"25% of 60 equals",o:["10","12","15","20"],a:2,t:"Percentages"},
-      {q:"0.09 written as a percentage",o:["0.9%","9%","90%","0.09%"],a:1,t:"Percentages"},
-      {q:"1% of 300 equals",o:["30","3","0.3","300"],a:1,t:"Percentages"},
-
-      // FDP
-      {q:"1/4 written as a decimal",o:["0.2","0.25","0.4","0.5"],a:1,t:"FDP"},
-      {q:"1/5 written as a decimal",o:["0.1","0.2","0.25","0.5"],a:1,t:"FDP"},
-      {q:"0.5 written as a percentage",o:["5%","50%","500%","0.05%"],a:1,t:"FDP"},
-      {q:"75% written as a decimal",o:["0.75","7.5","0.075","75"],a:0,t:"FDP"},
-      {q:"0.25 written as a percentage",o:["2.5%","25%","250%","0.025%"],a:1,t:"FDP"},
-      {q:"1/2 written as a decimal",o:["0.2","0.25","0.5","2"],a:2,t:"FDP"},
-      {q:"20% written as a decimal",o:["0.2","2","0.02","20"],a:0,t:"FDP"},
-      {q:"0.8 written as a percentage",o:["8%","80%","800%","0.8%"],a:1,t:"FDP"},
-      {q:"1/4 written as a percentage",o:["4%","14%","25%","40%"],a:2,t:"FDP"},
-      {q:"0.6 written as a percentage",o:["6%","60%","600%","0.06%"],a:1,t:"FDP"},
-
-      // Rounding
-      {q:"Round 4.376 to 2 decimal places",o:["4.38","4.37","4.36","4.4"],a:0,t:"Rounding"},
-      {q:"Round 5.843 to 1 decimal place",o:["5.8","5.9","5.84","6"],a:0,t:"Rounding"},
-      {q:"Round 3486 to 2 significant figures",o:["3500","3400","3480","3490"],a:0,t:"Rounding"},
-      {q:"Round 7421 to 1 significant figure",o:["7000","8000","7400","7420"],a:0,t:"Rounding"},
-      {q:"Round 0.0864 to 2 significant figures",o:["0.086","0.087","0.0864","0.09"],a:0,t:"Rounding"},
-      {q:"Round 19.96 to 1 decimal place",o:["20.0","19.9","19.96","20.1"],a:0,t:"Rounding"},
-      {q:"Round 6812 to 2 significant figures",o:["6800","6900","7000","6810"],a:0,t:"Rounding"},
-      {q:"Round 3.14159 to 3 decimal places",o:["3.141","3.142","3.140","3.15"],a:1,t:"Rounding"},
-      {q:"Round 999 to 1 significant figure",o:["900","1000","990","999"],a:1,t:"Rounding"},
-      {q:"Round 2.49 to 1 decimal place",o:["2.4","2.5","2.49","3.0"],a:1,t:"Rounding"},
-
-      // Angles
-      {q:"Angles in a triangle add up to",o:["90","180","360","270"],a:1,t:"Angles"},
-      {q:"Angles around a point add up to",o:["180","90","360","270"],a:2,t:"Angles"},
-      {q:"Angles on a straight line add up to",o:["90","180","360","270"],a:1,t:"Angles"},
-      {q:"Angles in a quadrilateral add up to",o:["90","180","270","360"],a:3,t:"Angles"},
-      {q:"Corresponding angles are",o:["Equal","Add to 180","Add to 90","Random"],a:0,t:"Angles"},
-      {q:"Co-interior angles",o:["Equal","Add to 180","Add to 90","Random"],a:1,t:"Angles"},
-      {q:"Alternate angles are",o:["Equal","Add to 180","Add to 90","Random"],a:0,t:"Angles"},
-      {q:"A full turn is",o:["90°","180°","270°","360°"],a:3,t:"Angles"},
-      {q:"If two angles lie on a straight line, they are",o:["Equal","Supplementary","Acute","Reflex"],a:1,t:"Angles"},
-      {q:"If one of two corresponding angles is 65°, the other is",o:["25°","65°","115°","180°"],a:1,t:"Angles"},
-      {q:"If one of two co-interior angles is 110°, the other is",o:["70°","110°","80°","90°"],a:0,t:"Angles"},
-      {q:"If one of two alternate angles is 48°, the other is",o:["132°","48°","42°","96°"],a:1,t:"Angles"},
-
-      // Prime Factors
-      {q:"Which number is prime?",o:["9","11","15","21"],a:1,t:"Prime Factors"},
-      {q:"Which number is prime?",o:["12","17","18","20"],a:1,t:"Prime Factors"},
-      {q:"Prime factors of 12 include",o:["2 and 3","4 and 3","6 and 2","12"],a:0,t:"Prime Factors"},
-      {q:"Prime factors of 15 include",o:["3 and 5","5 and 10","15 and 3","1 and 15"],a:0,t:"Prime Factors"},
-      {q:"Which number is prime?",o:["27","29","33","39"],a:1,t:"Prime Factors"},
-      {q:"Which number is prime?",o:["51","57","61","63"],a:2,t:"Prime Factors"},
-      {q:"24 as a product of prime factors is",o:["2 × 12","2 × 2 × 2 × 3","4 × 6","3 × 8"],a:1,t:"Prime Factors"},
-      {q:"18 as a product of prime factors is",o:["2 × 3 × 3","6 × 3","9 × 2","1 × 18"],a:0,t:"Prime Factors"},
-      {q:"Which of these is not prime?",o:["2","3","5","9"],a:3,t:"Prime Factors"},
-      {q:"Which of these is prime?",o:["1","2","4","6"],a:1,t:"Prime Factors"},
-
-      // Geometry
-      {q:"A corner of a shape is called",o:["Face","Edge","Vertex","Angle"],a:2,t:"Geometry"},
-      {q:"A flat surface of a solid shape is called",o:["Face","Edge","Vertex","Corner"],a:0,t:"Geometry"},
-      {q:"A line where two faces meet",o:["Face","Edge","Vertex","Side"],a:1,t:"Geometry"},
-      {q:"Which shape has no edges?",o:["Cube","Cylinder","Sphere","Prism"],a:2,t:"Geometry"},
-      {q:"How many faces does a cube have?",o:["4","6","8","12"],a:1,t:"Geometry"},
-      {q:"Which shape has one curved surface and no vertices?",o:["Sphere","Cylinder","Cube","Pyramid"],a:0,t:"Geometry"},
-      {q:"How many vertices does a cuboid have?",o:["4","6","8","12"],a:2,t:"Geometry"},
-      {q:"Which shape has two circular faces?",o:["Cone","Cylinder","Sphere","Cube"],a:1,t:"Geometry"},
-      {q:"Which shape has one vertex?",o:["Cone","Sphere","Cylinder","Cuboid"],a:0,t:"Geometry"},
-      {q:"A square-based pyramid has",o:["1 vertex","5 vertices","8 vertices","2 vertices"],a:1,t:"Geometry"},
-
-      // Coordinates
-      {q:"Which axis runs horizontally?",o:["X","Y","Z","Angle"],a:0,t:"Coordinates"},
-      {q:"Which axis runs vertically?",o:["X","Y","Z","Angle"],a:1,t:"Coordinates"},
-      {q:"Which coordinate comes first?",o:["X","Y","Z","Angle"],a:0,t:"Coordinates"},
-      {q:"Which coordinate comes second?",o:["X","Y","Z","Angle"],a:1,t:"Coordinates"},
-      {q:"The point (3, 5) means",o:["3 across, 5 up","5 across, 3 up","3 down, 5 left","5 down, 3 left"],a:0,t:"Coordinates"},
-      {q:"The point (0, 4) lies on",o:["the x-axis","the y-axis","neither axis","both axes"],a:1,t:"Coordinates"},
-      {q:"The point (6, 0) lies on",o:["the x-axis","the y-axis","neither axis","both axes"],a:0,t:"Coordinates"},
-      {q:"Which point is 2 across and 1 up?",o:["(1,2)","(2,1)","(2,2)","(1,1)"],a:1,t:"Coordinates"},
-      {q:"Which value tells you how far left or right to move?",o:["X","Y","Z","Angle"],a:0,t:"Coordinates"},
-      {q:"Which value tells you how far up or down to move?",o:["X","Y","Z","Angle"],a:1,t:"Coordinates"},
-
-      // Inequalities
-      {q:"Which symbol means greater than?",o:["<",">","≤","≥"],a:1,t:"Inequalities"},
-      {q:"Which symbol means less than?",o:["<","≤",">","≥"],a:0,t:"Inequalities"},
-      {q:"Which symbol means greater than or equal to?",o:[">","≥","<","≤"],a:1,t:"Inequalities"},
-      {q:"Which symbol means less than or equal to?",o:["<","≤",">","≥"],a:1,t:"Inequalities"},
-      {q:"Which sign makes 5 __ 3 true?",o:["<",">","=","≤"],a:1,t:"Inequalities"},
-      {q:"Which sign makes 2 __ 2 true?",o:[">","<","≥","≠"],a:2,t:"Inequalities"},
-      {q:"Which sign makes 4 __ 7 true?",o:[">","<","≥","="],a:1,t:"Inequalities"},
-      {q:"Which sign means a value can be equal as well as bigger?",o:["<",">","≥","≠"],a:2,t:"Inequalities"},
-      {q:"Which sign means a value can be equal as well as smaller?",o:["≤","<",">","≥"],a:0,t:"Inequalities"},
-      {q:"Which is true?",o:["6 < 2","3 ≥ 3","4 > 9","1 ≤ 0"],a:1,t:"Inequalities"},
-
-      // Calculator
-      {q:"(8 + 6) × 5 equals",o:["70","40","14","30"],a:0,t:"Calculator"},
-      {q:"12 ÷ 3 + 4 equals",o:["8","6","4","10"],a:0,t:"Calculator"},
-      {q:"(10 + 5) ÷ 5 equals",o:["2","3","5","4"],a:1,t:"Calculator"},
-      {q:"20 − 6 × 2 equals",o:["28","14","8","16"],a:2,t:"Calculator"},
-      {q:"3 + 4 × 2 equals",o:["14","11","8","7"],a:1,t:"Calculator"},
-      {q:"(3 + 4) × 2 equals",o:["14","11","8","7"],a:0,t:"Calculator"},
-      {q:"18 ÷ (3 × 2) equals",o:["3","6","12","9"],a:0,t:"Calculator"},
-      {q:"5 × 5 − 4 equals",o:["21","25","20","9"],a:0,t:"Calculator"}
-    ];
-
-    const TOPICS = [...new Set(questionBank.map(q => q.t))].sort();
-    const LETTERS = ["A","B","C","D"];
-
-    let questions = [];
-    let index = 0;
-    let score = 0;
-    let locked = false;
-    let countdownInterval = null;
-    let topicScores = {};
-    let currentMode = "";
-    let currentTopic = "";
-
-    function saveAnalytics(result){
-      const existing = JSON.parse(localStorage.getItem(ANALYTICS_KEY) || "[]");
-      existing.push(result);
-      localStorage.setItem(ANALYTICS_KEY, JSON.stringify(existing));
+    function loadProgress() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { perQuestion: {}, revisionList: {} };
+      } catch {
+        return { perQuestion: {}, revisionList: {} };
+      }
     }
 
-    function getAnalytics(){
-      return JSON.parse(localStorage.getItem(ANALYTICS_KEY) || "[]");
+    function saveProgress() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.progress));
     }
 
-    function clearAnalytics(){
-      localStorage.removeItem(ANALYTICS_KEY);
-      analyticsScreen();
+    function normaliseQuestion(raw, fallbackId) {
+      const q = { ...raw };
+      q.ID = String(q.ID || fallbackId).trim();
+      q.Topic = String(q.Topic || "General").trim();
+      q.Subtopic = String(q.Subtopic || "").trim();
+      q.Question = String(q.Question || "").trim();
+      q["Option A"] = String(q["Option A"] || "").trim();
+      q["Option B"] = String(q["Option B"] || "").trim();
+      q["Option C"] = String(q["Option C"] || "").trim();
+      q["Option D"] = String(q["Option D"] || "").trim();
+      q["Correct Letter"] = String(q["Correct Letter"] || "").trim().toUpperCase();
+      q["Correct Index"] = Number(q["Correct Index"] ?? letterToIndex(q["Correct Letter"]));
+      q.Active = String(q.Active || "Yes").trim();
+      q.Notes = String(q.Notes || "").trim();
+      q.__key = buildQuestionKey(q);
+      return q;
     }
 
-    function shuffle(array){
-      const arr = [...array];
-      for(let i = arr.length - 1; i > 0; i--){
+    function buildQuestionKey(q) {
+      return `${q.ID}__${q.Topic}__${q.Question}`;
+    }
+
+    function letterToIndex(letter) {
+      return ({ A: 0, B: 1, C: 2, D: 3 })[letter] ?? 0;
+    }
+
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
+        [a[i], a[j]] = [a[j], a[i]];
       }
-      return arr;
+      return a;
     }
 
-    function render(html){
-      document.getElementById("app").innerHTML = html;
+    function getQuestionProgress(q) {
+      return state.progress.perQuestion[q.__key] || {
+        correctCount: 0,
+        wrongCount: 0,
+        lastResult: null,
+        topic: q.Topic,
+        subtopic: q.Subtopic || "",
+        question: q.Question
+      };
     }
 
-    function startScreen(){
-      const analytics = getAnalytics();
-      const attempts = analytics.length;
-      const avg = attempts
-        ? Math.round(analytics.reduce((sum,a)=>sum+a.percent,0) / attempts)
-        : 0;
-
-      render(`
-        <div class="grid">
-          <div class="panel">
-            <h3>Full Diagnostic</h3>
-            <p>20 random questions across topics. Best for finding the main gaps quickly.</p>
-            <button class="big-btn" onclick="startDiagnostic()">Start Full Diagnostic</button>
-          </div>
-          <div class="panel">
-            <h3>Practice a Topic</h3>
-            <p>Choose one topic and complete 10 focused questions.</p>
-            <button class="big-btn" onclick="topicMenu()">Choose a Topic</button>
-          </div>
-          <div class="panel">
-            <h3>Teacher Analytics</h3>
-            <p>See results saved on this browser and device.</p>
-            <button class="big-btn" onclick="analyticsScreen()">Open Analytics</button>
-          </div>
-        </div>
-
-        <div class="stat-row">
-          <div class="stat">
-            <div class="num">${questionBank.length}</div>
-            <div class="label">Questions in bank</div>
-          </div>
-          <div class="stat">
-            <div class="num">${TOPICS.length}</div>
-            <div class="label">Topics covered</div>
-          </div>
-          <div class="stat">
-            <div class="num">${attempts}</div>
-            <div class="label">Saved attempts on this device</div>
-          </div>
-          <div class="stat">
-            <div class="num">${attempts ? avg + "%" : "—"}</div>
-            <div class="label">Average score</div>
-          </div>
-        </div>
-
-        <div class="panel">
-          <h3>Topics included</h3>
-          <div>
-            ${TOPICS.map(t => `<span class="tag">${t}</span>`).join("")}
-          </div>
-          <div class="divider"></div>
-          <p class="note">Students receive a random set of questions each time. Results are saved only on the device and browser being used.</p>
-        </div>
-      `);
+    function isSecure(q) {
+      return getQuestionProgress(q).correctCount >= 3;
     }
 
-    function startDiagnostic(){
-      currentMode = "diagnostic";
-      currentTopic = "";
-      questions = shuffle(questionBank).slice(0, 20);
-      startQuiz();
+    function addToRevision(q) {
+      state.progress.revisionList[q.__key] = {
+        id: q.ID,
+        topic: q.Topic,
+        subtopic: q.Subtopic || "",
+        question: q.Question
+      };
     }
 
-    function topicMenu(){
-      render(`
-        <div class="panel">
-          <h2>Select a Topic</h2>
-          <p class="muted">Each topic practice uses 10 random questions from that topic.</p>
-          ${TOPICS.map(topic => `<button class="topic-btn" onclick="startTopic('${topic.replace(/'/g, "\\'")}')">${topic}</button>`).join("")}
-          <div class="actions">
-            <button class="small-btn ghost-btn" onclick="startScreen()">Back</button>
-          </div>
-        </div>
-      `);
-    }
-
-    function startTopic(topic){
-      currentMode = "topic";
-      currentTopic = topic;
-      const topicQuestions = questionBank.filter(q => q.t === topic);
-      questions = shuffle(topicQuestions).slice(0, Math.min(10, topicQuestions.length));
-      startQuiz();
-    }
-
-    function startQuiz(){
-      index = 0;
-      score = 0;
-      locked = false;
-      topicScores = {};
-      clearInterval(countdownInterval);
-      loadQuestion();
-    }
-
-    function progressPercent(){
-      return Math.round((index / questions.length) * 100);
-    }
-
-    function loadQuestion(){
-      const q = questions[index];
-      render(`
-        <div class="progress-wrap">
-          <div class="progress-meta">
-            <span>${currentMode === "topic" ? "Topic Practice" : "Full Diagnostic"}${currentTopic ? " · " + currentTopic : ""}</span>
-            <span>Question ${index + 1} of ${questions.length}</span>
-          </div>
-          <div class="progress">
-            <div class="bar" style="width:${progressPercent()}%"></div>
-          </div>
-        </div>
-
-        <div class="question-card">
-          <div class="q-topic">${q.t}</div>
-          <h2 class="question">${q.q}</h2>
-
-          <div id="optionsWrap">
-            ${q.o.map((opt, i) => `
-              <div class="option" id="opt${i}" onclick="answer(${i})">
-                <span class="option-letter">${LETTERS[i]}</span>
-                <span>${opt}</span>
-              </div>
-            `).join("")}
-          </div>
-
-          <div id="feedback" class="feedback"></div>
-
-          <div class="actions">
-            <button class="small-btn ghost-btn" onclick="startScreen()">Exit to Home</button>
-          </div>
-        </div>
-      `);
-    }
-
-    function answer(choice){
-      if(locked) return;
-      locked = true;
-
-      const q = questions[index];
-      if(!topicScores[q.t]){
-        topicScores[q.t] = { correct: 0, total: 0 };
+    function removeFromRevisionIfSecure(q) {
+      if (isSecure(q)) {
+        delete state.progress.revisionList[q.__key];
       }
-      topicScores[q.t].total++;
+    }
 
-      const selected = document.getElementById("opt" + choice);
-      const correct = document.getElementById("opt" + q.a);
-      const feedbackEl = document.getElementById("feedback");
+    function updateQuestionStats(q, wasCorrect) {
+      const current = getQuestionProgress(q);
+      const next = {
+        ...current,
+        correctCount: current.correctCount + (wasCorrect ? 1 : 0),
+        wrongCount: current.wrongCount + (wasCorrect ? 0 : 1),
+        lastResult: wasCorrect ? "correct" : "wrong",
+        topic: q.Topic,
+        subtopic: q.Subtopic || "",
+        question: q.Question
+      };
+      state.progress.perQuestion[q.__key] = next;
 
-      if(choice === q.a){
-        score++;
-        topicScores[q.t].correct++;
-        selected.classList.add("correct");
-        feedbackEl.className = "feedback correct";
-        feedbackEl.innerHTML = `✅ Correct <span class="countdown" id="countdown"></span>`;
+      if (wasCorrect) {
+        removeFromRevisionIfSecure(q);
       } else {
-        selected.classList.add("wrong");
-        correct.classList.add("correct");
-        feedbackEl.className = "feedback wrong";
-        feedbackEl.innerHTML = `❌ Incorrect <span class="countdown" id="countdown"></span>`;
+        addToRevision(q);
       }
 
-      let remaining = 3;
-      const countdownEl = document.getElementById("countdown");
-      countdownEl.textContent = `· Next question in ${remaining}s`;
-
-      countdownInterval = setInterval(() => {
-        remaining--;
-        if(remaining > 0){
-          countdownEl.textContent = `· Next question in ${remaining}s`;
-        }
-      }, 1000);
-
-      setTimeout(() => {
-        clearInterval(countdownInterval);
-        nextQuestion();
-      }, 3000);
+      saveProgress();
     }
 
-    function nextQuestion(){
-      index++;
-      locked = false;
-      clearInterval(countdownInterval);
+    function topicSummary() {
+      const topics = [...new Set(state.activeQuestions.map(q => q.Topic))].sort();
+      return topics.map(topic => {
+        const topicQs = state.activeQuestions.filter(q => q.Topic === topic);
+        const secureCount = topicQs.filter(isSecure).length;
+        const revisionCount = topicQs.filter(q => state.progress.revisionList[q.__key]).length;
+        const attempted = topicQs.filter(q => {
+          const p = getQuestionProgress(q);
+          return p.correctCount > 0 || p.wrongCount > 0;
+        }).length;
 
-      if(index < questions.length){
-        loadQuestion();
-      } else {
-        finishQuiz();
-      }
-    }
-
-    function buildRevisionAdvice(topicPercentages){
-      const weak = topicPercentages.filter(x => x.percent < 60).sort((a,b) => a.percent - b.percent);
-      return weak;
-    }
-
-    function finishQuiz(){
-      const percent = Math.round((score / questions.length) * 100);
-
-      const topicPercentages = Object.keys(topicScores).map(topic => {
-        const data = topicScores[topic];
         return {
           topic,
-          percent: Math.round((data.correct / data.total) * 100),
-          correct: data.correct,
-          total: data.total
+          total: topicQs.length,
+          secureCount,
+          revisionCount,
+          attempted,
+          securePct: topicQs.length ? Math.round((secureCount / topicQs.length) * 100) : 0
         };
-      }).sort((a,b) => a.topic.localeCompare(b.topic));
-
-      const weak = buildRevisionAdvice(topicPercentages);
-
-      saveAnalytics({
-        date: new Date().toISOString(),
-        mode: currentMode,
-        selectedTopic: currentTopic,
-        percent,
-        score,
-        total: questions.length,
-        topics: topicPercentages
       });
-
-      render(`
-        <div class="panel">
-          <h2>Student Report</h2>
-          <div class="stat-row">
-            <div class="stat">
-              <div class="num">${score}/${questions.length}</div>
-              <div class="label">Questions correct</div>
-            </div>
-            <div class="stat">
-              <div class="num">${percent}%</div>
-              <div class="label">Overall score</div>
-            </div>
-            <div class="stat">
-              <div class="num">${currentMode === "topic" ? currentTopic : "Mixed"}</div>
-              <div class="label">Mode</div>
-            </div>
-          </div>
-
-          <h3>Topic Mastery</h3>
-          ${topicPercentages.map(item => `
-            <div class="topic-line">
-              <div class="topic-label">
-                <span>${item.topic}</span>
-                <span>${item.percent}% (${item.correct}/${item.total})</span>
-              </div>
-              <div class="topic-bar">
-                <div class="topic-fill" style="width:${item.percent}%"></div>
-              </div>
-            </div>
-          `).join("")}
-
-          <div class="divider"></div>
-
-          <h3>Priority Revision</h3>
-          ${
-            weak.length
-              ? `<ul class="list">${weak.map(w => `<li>${w.topic}</li>`).join("")}</ul>`
-              : `<p class="muted">No major gaps detected in this attempt.</p>`
-          }
-
-          <div class="actions">
-            <button class="small-btn" onclick="startScreen()">Home</button>
-            <button class="small-btn" onclick="${currentMode === "topic" ? `startTopic('${currentTopic.replace(/'/g, "\\'")}')` : "startDiagnostic()"}">Try Again</button>
-            <button class="small-btn ghost-btn" onclick="analyticsScreen()">View Analytics</button>
-          </div>
-        </div>
-      `);
     }
 
-    function analyticsScreen(){
-      const data = getAnalytics();
+    function overallStats() {
+      const total = state.activeQuestions.length;
+      const secure = state.activeQuestions.filter(isSecure).length;
+      const revision = Object.keys(state.progress.revisionList).length;
+      const attempted = state.activeQuestions.filter(q => {
+        const p = getQuestionProgress(q);
+        return p.correctCount > 0 || p.wrongCount > 0;
+      }).length;
 
-      if(!data.length){
-        render(`
-          <div class="panel">
-            <h2>Teacher Analytics</h2>
-            <p class="muted">No saved attempts yet on this device.</p>
-            <div class="actions">
-              <button class="small-btn ghost-btn" onclick="startScreen()">Back</button>
-            </div>
-          </div>
-        `);
+      return { total, secure, revision, attempted };
+    }
+
+    function parseCSV() {
+      state.view = "loading";
+      render();
+
+      Papa.parse(CSV_FILE, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          const cleaned = results.data
+            .map((row, i) => normaliseQuestion(row, i + 1))
+            .filter(q => q.Question && String(q.Active).toLowerCase() !== "no");
+
+          state.allQuestions = cleaned;
+          state.activeQuestions = cleaned;
+          state.topics = [...new Set(cleaned.map(q => q.Topic).filter(Boolean))].sort();
+          state.subtopics = [...new Set(cleaned.map(q => q.Subtopic).filter(Boolean))].sort();
+          state.view = "home";
+          render();
+        },
+        error: () => {
+          state.view = "error";
+          render();
+        }
+      });
+    }
+
+    function setView(view) {
+      stopTimer();
+      state.view = view;
+      state.questionLocked = false;
+      render();
+    }
+
+    function startDiagnostic() {
+      const count = Math.min(20, state.activeQuestions.length);
+      state.currentMode = "diagnostic";
+      state.selectedTopic = null;
+      state.selectedSubtopic = null;
+      state.timedMode = false;
+      state.timedOut = false;
+      state.currentQuestions = shuffle(state.activeQuestions).slice(0, count);
+      state.currentIndex = 0;
+      state.sessionScore = 0;
+      state.sessionCorrect = 0;
+      state.sessionWrong = 0;
+      state.questionLocked = false;
+      state.view = "quiz";
+      render();
+    }
+
+    function openPracticeTopics() {
+      state.view = "practiceTopics";
+      render();
+    }
+
+    function openResults() {
+      state.view = "results";
+      render();
+    }
+
+    function openRevisionList() {
+      state.view = "revision";
+      render();
+    }
+
+    function startPractice(topic, subtopic = null, timed = false) {
+      let filtered = state.activeQuestions.filter(q => q.Topic === topic);
+      if (subtopic) filtered = filtered.filter(q => q.Subtopic === subtopic);
+      if (!filtered.length) return;
+
+      state.currentMode = timed ? "timedPractice" : "practice";
+      state.selectedTopic = topic;
+      state.selectedSubtopic = subtopic;
+      state.timedMode = timed;
+      state.timedOut = false;
+      state.currentQuestions = buildPracticeSet(filtered, timed ? 20 : filtered.length);
+      state.currentIndex = 0;
+      state.sessionScore = 0;
+      state.sessionCorrect = 0;
+      state.sessionWrong = 0;
+      state.questionLocked = false;
+      state.view = "quiz";
+
+      if (timed) startTimer(60);
+      render();
+    }
+
+    function buildPracticeSet(filtered, count) {
+      const insecure = filtered.filter(q => !isSecure(q));
+      const secure = filtered.filter(q => isSecure(q));
+      const ordered = [...shuffle(insecure), ...shuffle(secure)];
+      return ordered.slice(0, Math.min(count, ordered.length));
+    }
+
+    function startRevisionMode() {
+      const keys = Object.keys(state.progress.revisionList);
+      const revisionQs = state.activeQuestions.filter(q => keys.includes(q.__key));
+
+      if (!revisionQs.length) {
+        alert("Your revision list is empty.");
         return;
       }
 
-      const attempts = data.length;
-      const avg = Math.round(data.reduce((sum, x) => sum + x.percent, 0) / attempts);
-      const latest = data[data.length - 1].percent;
-
-      const topicMap = {};
-      data.forEach(attempt => {
-        attempt.topics.forEach(t => {
-          if(!topicMap[t.topic]){
-            topicMap[t.topic] = { totalPercent: 0, count: 0, weakCount: 0 };
-          }
-          topicMap[t.topic].totalPercent += t.percent;
-          topicMap[t.topic].count += 1;
-          if(t.percent < 60) topicMap[t.topic].weakCount += 1;
-        });
-      });
-
-      const topicSummary = Object.keys(topicMap).map(topic => ({
-        topic,
-        avg: Math.round(topicMap[topic].totalPercent / topicMap[topic].count),
-        weakCount: topicMap[topic].weakCount,
-        count: topicMap[topic].count
-      })).sort((a,b) => a.avg - b.avg);
-
-      render(`
-        <div class="panel">
-          <h2>Teacher Analytics</h2>
-          <p class="note">These results come from this browser on this device only.</p>
-
-          <div class="stat-row">
-            <div class="stat">
-              <div class="num">${attempts}</div>
-              <div class="label">Saved attempts</div>
-            </div>
-            <div class="stat">
-              <div class="num">${avg}%</div>
-              <div class="label">Average score</div>
-            </div>
-            <div class="stat">
-              <div class="num">${latest}%</div>
-              <div class="label">Latest score</div>
-            </div>
-          </div>
-
-          <h3>Weakest Topics</h3>
-          ${topicSummary.map(item => `
-            <div class="topic-line">
-              <div class="topic-label">
-                <span>${item.topic}</span>
-                <span>${item.avg}% average · weak in ${item.weakCount} attempt(s)</span>
-              </div>
-              <div class="topic-bar">
-                <div class="topic-fill" style="width:${item.avg}%"></div>
-              </div>
-            </div>
-          `).join("")}
-
-          <div class="actions">
-            <button class="small-btn ghost-btn" onclick="startScreen()">Back</button>
-            <button class="small-btn danger-btn" onclick="clearAnalytics()">Clear Analytics</button>
-          </div>
-        </div>
-      `);
+      state.currentMode = "revision";
+      state.selectedTopic = null;
+      state.selectedSubtopic = null;
+      state.timedMode = false;
+      state.timedOut = false;
+      state.currentQuestions = shuffle(revisionQs);
+      state.currentIndex = 0;
+      state.sessionScore = 0;
+      state.sessionCorrect = 0;
+      state.sessionWrong = 0;
+      state.questionLocked = false;
+      state.view = "quiz";
+      render();
     }
 
-    startScreen();
+    function startTimer(seconds) {
+      stopTimer();
+      state.timerSeconds = seconds;
+
+      state.timerHandle = setInterval(() => {
+        state.timerSeconds -= 1;
+
+        if (state.timerSeconds <= 0) {
+          stopTimer();
+          finishSession(true);
+          return;
+        }
+
+        updateQuestionHeaderOnly();
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (state.timerHandle) clearInterval(state.timerHandle);
+      state.timerHandle = null;
+      state.timerSeconds = 0;
+    }
+
+    function updateQuestionHeaderOnly() {
+      const el = document.getElementById("timerPill");
+      if (el) el.textContent = `Time: ${state.timerSeconds}s`;
+    }
+
+    function answerQuestion(letter) {
+      if (state.questionLocked) return;
+
+      const q = state.currentQuestions[state.currentIndex];
+      const correct = q["Correct Letter"] === letter;
+
+      state.questionLocked = true;
+      state.sessionScore += correct ? 1 : 0;
+      state.sessionCorrect += correct ? 1 : 0;
+      state.sessionWrong += correct ? 0 : 1;
+
+      updateQuestionStats(q, correct);
+
+      const feedback = document.getElementById("feedback");
+      if (feedback) {
+        const correctText = q[`Option ${q["Correct Letter"]}`];
+        feedback.innerHTML = correct
+          ? `<span class="ok"><strong>Correct.</strong></span> Secure count for this question: ${getQuestionProgress(q).correctCount}/3`
+          : `<span class="bad"><strong>Not correct.</strong></span> Correct answer: <strong>${q["Correct Letter"]}</strong> – ${correctText}. This question has been added to your revision list.`;
+      }
+
+      highlightButtons(letter, q["Correct Letter"]);
+    }
+
+    function highlightButtons(chosen, correct) {
+      document.querySelectorAll(".answer-btn").forEach(btn => {
+        const letter = btn.dataset.letter;
+
+        if (letter === correct) {
+          btn.style.outline = "3px solid #30d158";
+        }
+
+        if (letter === chosen && chosen !== correct) {
+          btn.style.outline = "3px solid #ff5f57";
+        }
+
+        btn.disabled = true;
+      });
+
+      const nextWrap = document.getElementById("nextWrap");
+      if (nextWrap) nextWrap.style.display = "block";
+    }
+
+    function nextQuestion() {
+      state.questionLocked = false;
+      state.currentIndex += 1;
+
+      if (state.currentIndex >= state.currentQuestions.length) {
+        finishSession(false);
+        return;
+      }
+
+      render();
+    }
+
+    function finishSession(timedOut) {
+      stopTimer();
+
+      if (state.currentMode === "diagnostic") {
+        const summary = buildDiagnosticSummary();
+        state.lastDiagnosticSummary = summary;
+        state.view = "diagnosticComplete";
+        render();
+        return;
+      }
+
+      state.view = "sessionComplete";
+      state.timedOut = timedOut;
+      render();
+    }
+
+    function buildDiagnosticSummary() {
+      const askedTopics = [...new Set(state.currentQuestions.map(q => q.Topic))];
+
+      return askedTopics.map(topic => {
+        const questions = state.currentQuestions.filter(q => q.Topic === topic);
+        const correct = questions.filter(q => getQuestionProgress(q).lastResult === "correct").length;
+
+        return {
+          topic,
+          asked: questions.length,
+          correct,
+          incorrect: questions.length - correct,
+          pct: questions.length ? Math.round((correct / questions.length) * 100) : 0
+        };
+      }).sort((a, b) => a.pct - b.pct);
+    }
+
+    function renderTopNav() {
+      const nav = document.getElementById("topNav");
+      if (!nav) return;
+
+      if (state.view === "loading" || state.view === "error") {
+        nav.innerHTML = "";
+        return;
+      }
+
+      nav.innerHTML = `
+        <button class="nav-btn" onclick="goHome()">Home</button>
+        <button class="nav-btn" onclick="startDiagnostic()">Diagnostic</button>
+        <button class="nav-btn" onclick="openPracticeTopics()">Practice</button>
+        <button class="nav-btn" onclick="openResults()">Results</button>
+        <button class="nav-btn" onclick="openRevisionList()">Revision List</button>
+      `;
+    }
+
+    function goHome() {
+      stopTimer();
+      state.view = "home";
+      render();
+    }
+
+    function renderHtmlTargets(targets) {
+      setTimeout(() => {
+        targets.forEach(target => {
+          const el = document.getElementById(target.id);
+          if (el) el.innerHTML = target.html;
+        });
+      }, 0);
+    }
+
+    function renderRevisionHtml(questions) {
+      setTimeout(() => {
+        document.querySelectorAll(".rev-question").forEach(el => {
+          const i = Number(el.getAttribute("data-index"));
+          if (!Number.isNaN(i) && questions[i]) {
+            el.innerHTML = questions[i].Question;
+          }
+        });
+      }, 0);
+    }
+
+    function render() {
+      renderTopNav();
+
+      const app = document.getElementById("app");
+      if (!app) return;
+
+      if (state.view === "loading") {
+        app.innerHTML = `<div class="panel content-card"><h2>Loading questions…</h2><p class="muted">Reading from <strong>${CSV_FILE}</strong>. Any changes to your CSV will update the topic and subtopic lists automatically.</p></div>`;
+        return;
+      }
+
+      if (state.view === "error") {
+        app.innerHTML = `
+          <div class="panel content-card">
+            <h2>Could not read the CSV file</h2>
+            <p class="muted">Check that <strong>${CSV_FILE}</strong> is in the same folder as <strong>index.html</strong>, and that the column headers match your template.</p>
+          </div>
+        `;
+        return;
+      }
+
+      if (state.view === "home") {
+        renderHome(app);
+        return;
+      }
+
+      if (state.view === "practiceTopics") {
+        renderPracticeTopics(app);
+        return;
+      }
+
+      if (state.view === "quiz") {
+        renderQuiz(app);
+        return;
+      }
+
+      if (state.view === "results") {
+        renderResults(app);
+        return;
+      }
+
+      if (state.view === "revision") {
+        renderRevision(app);
+        return;
+      }
+
+      if (state.view === "diagnosticComplete") {
+        renderDiagnosticComplete(app);
+        return;
+      }
+
+      if (state.view === "sessionComplete") {
+        renderSessionComplete(app);
+        return;
+      }
+    }
+
+    function renderHome(app) {
+      const stats = overallStats();
+      const summary = topicSummary().slice(0, 6);
+
+      app.innerHTML = `
+        <div class="hero">
+          <div class="panel hero-card">
+            <div class="kicker">Maths Diagnostic Tool</div>
+            <h1>Answer 20 questions to start the diagnosis of what you do and do not know.</h1>
+            <p class="muted">The diagnostic uses your CSV file. The practice topics and subtopics are also pulled directly from the CSV, so if you edit the file later the app updates automatically.</p>
+            <div class="button-row">
+              <button class="glass-btn" onclick="startDiagnostic()">Start Diagnostic<br><span class="mini">20 mixed questions</span></button>
+              <button class="glass-btn" onclick="openPracticeTopics()">Practice<br><span class="mini">Choose a topic from the CSV</span></button>
+              <button class="glass-btn" onclick="openResults()">Results<br><span class="mini">See strengths and gaps</span></button>
+              <button class="glass-btn" onclick="startRevisionMode()">Revision List<br><span class="mini">Questions answered incorrectly</span></button>
+            </div>
+            <div class="stats-grid">
+              <div class="stat-card"><div class="mini">Questions in bank</div><div class="stat-value">${stats.total}</div></div>
+              <div class="stat-card"><div class="mini">Attempted</div><div class="stat-value">${stats.attempted}</div></div>
+              <div class="stat-card"><div class="mini">Secure (3+ correct)</div><div class="stat-value">${stats.secure}</div></div>
+              <div class="stat-card"><div class="mini">Revision list</div><div class="stat-value">${stats.revision}</div></div>
+            </div>
+          </div>
+          <div class="panel tracker-card">
+            <h2>Tracking sheet</h2>
+            ${summary.length ? summary.map(item => `
+              <div class="row-card" style="margin-bottom:10px;">
+                <div class="row-top">
+                  <strong>${item.topic}</strong>
+                  <span class="mini">${item.secureCount}/${item.total} secure</span>
+                </div>
+                <div class="progress-wrap"><div class="progress-bar" style="width:${item.securePct}%;"></div></div>
+                <div class="mini" style="margin-top:8px;">Needs work: ${item.revisionCount} | Attempted: ${item.attempted}</div>
+              </div>
+            `).join("") : `<div class="empty-state">Start a diagnostic to begin tracking.</div>`}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPracticeTopics(app) {
+      const topics = topicSummary();
+
+      app.innerHTML = `
+        <div class="panel content-card">
+          <h2>Practice by topic</h2>
+          <p class="muted">Only topics found in the CSV file are shown here. If you later add a <strong>Subtopic</strong> column, those can also be used automatically.</p>
+          <div class="topic-grid">
+            ${topics.map(item => {
+              const subs = [...new Set(state.activeQuestions.filter(q => q.Topic === item.topic && q.Subtopic).map(q => q.Subtopic))].sort();
+              return `
+                <div class="panel topic-card">
+                  <h3>${item.topic}</h3>
+                  <p class="mini">${item.total} questions | ${item.secureCount} secure | ${item.revisionCount} in revision</p>
+                  <div class="progress-wrap"><div class="progress-bar" style="width:${item.securePct}%;"></div></div>
+                  <div class="button-row" style="margin-top:14px;">
+                    <button class="small-btn" onclick="startPractice('${escapeJs(item.topic)}', null, false)">Practice topic</button>
+                    <button class="small-btn" onclick="startPractice('${escapeJs(item.topic)}', null, true)">Timed practice</button>
+                  </div>
+                  ${subs.length ? `
+                    <div style="margin-top:14px;">
+                      <div class="mini" style="margin-bottom:8px;">Subtopics</div>
+                      <div class="subtopic-grid">
+                        ${subs.map(sub => `<button class="chip-btn" onclick="startPractice('${escapeJs(item.topic)}','${escapeJs(sub)}',false)">${escapeHtml(sub)}</button>`).join("")}
+                      </div>
+                    </div>
+                  ` : ""}
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderQuiz(app) {
+      const q = state.currentQuestions[state.currentIndex];
+      const total = state.currentQuestions.length;
+      const qProgress = getQuestionProgress(q);
+
+      app.innerHTML = `
+        <div class="panel question-card">
+          <div class="row-top">
+            <div>
+              <div class="kicker">${state.currentMode === "diagnostic" ? "Diagnostic" : state.currentMode === "timedPractice" ? "Timed Practice" : state.currentMode === "revision" ? "Revision" : "Practice"}</div>
+              <h2>Question ${state.currentIndex + 1} of ${total}</h2>
+            </div>
+            <div class="question-meta">
+              <span class="pill">Topic: ${escapeHtml(q.Topic)}</span>
+              ${q.Subtopic ? `<span class="pill">Subtopic: ${escapeHtml(q.Subtopic)}</span>` : ""}
+              ${state.timedMode ? `<span class="pill" id="timerPill">Time: ${state.timerSeconds}s</span>` : ""}
+              <span class="pill">Secure count: ${qProgress.correctCount}/3</span>
+            </div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-bar" style="width:${Math.round((state.currentIndex / total) * 100)}%;"></div>
+          </div>
+          <div style="margin-top:18px;">
+            <h3 id="questionText" class="rendered-html"></h3>
+
+            <button class="answer-btn" data-letter="A" onclick="answerQuestion('A')">
+              A. <span id="optA" class="rendered-html"></span>
+            </button>
+
+            <button class="answer-btn" data-letter="B" onclick="answerQuestion('B')">
+              B. <span id="optB" class="rendered-html"></span>
+            </button>
+
+            <button class="answer-btn" data-letter="C" onclick="answerQuestion('C')">
+              C. <span id="optC" class="rendered-html"></span>
+            </button>
+
+            <button class="answer-btn" data-letter="D" onclick="answerQuestion('D')">
+              D. <span id="optD" class="rendered-html"></span>
+            </button>
+
+            <div class="feedback rendered-html" id="feedback">Choose one answer.</div>
+
+            <div id="nextWrap" style="display:none; margin-top:14px;">
+              <button class="small-btn" onclick="nextQuestion()">Next question</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      renderHtmlTargets([
+        { id: "questionText", html: q.Question },
+        { id: "optA", html: q["Option A"] },
+        { id: "optB", html: q["Option B"] },
+        { id: "optC", html: q["Option C"] },
+        { id: "optD", html: q["Option D"] }
+      ]);
+    }
+
+    function renderResults(app) {
+      const topics = topicSummary();
+      const weakest = [...topics].sort((a, b) => a.securePct - b.securePct).slice(0, 6);
+
+      app.innerHTML = `
+        <div class="panel results-card">
+          <h2>Results</h2>
+          <p class="muted">You need to answer a question correctly at least <strong>three times</strong> for it to count as secure. Questions answered incorrectly go into your revision list.</p>
+          <div class="results-grid">
+            ${topics.length ? topics.map(item => `
+              <div class="row-card">
+                <div class="row-top">
+                  <strong>${escapeHtml(item.topic)}</strong>
+                  <span class="${item.securePct >= 70 ? "secure" : item.securePct >= 40 ? "needs-work" : "danger-text"}">${item.securePct}% secure</span>
+                </div>
+                <div class="mini">Attempted: ${item.attempted}/${item.total}</div>
+                <div class="mini">Secure: ${item.secureCount} | Revision: ${item.revisionCount}</div>
+                <div class="progress-wrap"><div class="progress-bar" style="width:${item.securePct}%;"></div></div>
+                <div class="button-row" style="margin-top:12px;">
+                  <button class="small-btn" onclick="startPractice('${escapeJs(item.topic)}', null, false)">Practise topic</button>
+                  <button class="ghost-btn" onclick="startPractice('${escapeJs(item.topic)}', null, true)">Timed practice</button>
+                </div>
+              </div>
+            `).join("") : `<div class="empty-state">No results yet. Start the diagnostic first.</div>`}
+          </div>
+          <div style="margin-top:22px;">
+            <h3>Priority topics to practise</h3>
+            ${weakest.length ? weakest.map(item => `<div class="mini" style="margin-bottom:8px;"><strong>${escapeHtml(item.topic)}</strong> — ${item.securePct}% secure, ${item.revisionCount} on revision list.</div>`).join("") : `<div class="mini">No diagnostic data yet.</div>`}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderRevision(app) {
+      const keys = Object.keys(state.progress.revisionList);
+      const questions = state.activeQuestions.filter(q => keys.includes(q.__key));
+
+      app.innerHTML = `
+        <div class="panel revision-card">
+          <div class="row-top">
+            <div>
+              <h2>Revision list</h2>
+              <p class="muted">Any question answered incorrectly appears here until it becomes secure.</p>
+            </div>
+            <button class="small-btn" onclick="startRevisionMode()" ${questions.length ? "" : "disabled"}>Practise revision list</button>
+          </div>
+          <div class="revision-grid">
+            ${questions.length ? questions.map((q, i) => {
+              const p = getQuestionProgress(q);
+              return `
+                <div class="row-card">
+                  <div class="mini">${escapeHtml(q.Topic)}${q.Subtopic ? ` • ${escapeHtml(q.Subtopic)}` : ""}</div>
+                  <strong class="rev-question rendered-html" data-index="${i}"></strong>
+                  <div class="mini" style="margin-top:8px;">Correct count: ${p.correctCount}/3 | Wrong: ${p.wrongCount}</div>
+                </div>
+              `;
+            }).join("") : `<div class="empty-state">Nothing in the revision list.</div>`}
+          </div>
+        </div>
+      `;
+
+      renderRevisionHtml(questions);
+    }
+
+    function renderDiagnosticComplete(app) {
+      const summary = state.lastDiagnosticSummary || [];
+
+      app.innerHTML = `
+        <div class="panel results-card">
+          <h2>Diagnostic complete</h2>
+          <p class="muted">Here is a first diagnosis of what to practise next.</p>
+          <div class="stats-grid">
+            <div class="stat-card"><div class="mini">Correct</div><div class="stat-value">${state.sessionCorrect}</div></div>
+            <div class="stat-card"><div class="mini">Incorrect</div><div class="stat-value">${state.sessionWrong}</div></div>
+            <div class="stat-card"><div class="mini">Score</div><div class="stat-value">${state.sessionScore}/${state.currentQuestions.length}</div></div>
+          </div>
+          <div style="margin-top:20px;" class="table-like">
+            ${summary.length ? summary.map(item => `
+              <div class="row-card">
+                <div class="row-top">
+                  <strong>${escapeHtml(item.topic)}</strong>
+                  <span class="${item.pct >= 70 ? "secure" : item.pct >= 40 ? "needs-work" : "danger-text"}">${item.pct}%</span>
+                </div>
+                <div class="mini">Asked: ${item.asked} | Correct: ${item.correct} | Incorrect: ${item.incorrect}</div>
+                <div class="button-row" style="margin-top:12px;">
+                  <button class="small-btn" onclick="startPractice('${escapeJs(item.topic)}', null, false)">Practise this topic</button>
+                  <button class="ghost-btn" onclick="startPractice('${escapeJs(item.topic)}', null, true)">Timed practice</button>
+                </div>
+              </div>
+            `).join("") : `<div class="empty-state">No summary available.</div>`}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSessionComplete(app) {
+      app.innerHTML = `
+        <div class="panel results-card">
+          <h2>${state.timedOut ? "Time complete" : "Session complete"}</h2>
+          <div class="stats-grid">
+            <div class="stat-card"><div class="mini">Correct</div><div class="stat-value">${state.sessionCorrect}</div></div>
+            <div class="stat-card"><div class="mini">Incorrect</div><div class="stat-value">${state.sessionWrong}</div></div>
+            <div class="stat-card"><div class="mini">Score</div><div class="stat-value">${state.sessionScore}/${state.currentQuestions.length}</div></div>
+          </div>
+          <div class="button-row" style="margin-top:18px;">
+            <button class="glass-btn" onclick="openPracticeTopics()">Back to Practice</button>
+            <button class="glass-btn" onclick="openResults()">View Results</button>
+            <button class="glass-btn" onclick="openRevisionList()">Open Revision List</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function escapeJs(text) {
+      return String(text)
+        .replace(/\\/g, "\\\\")
+        .replace(/'/g, "\\'")
+        .replace(/\r/g, "")
+        .replace(/\n/g, "\\n");
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    parseCSV();
   </script>
 </body>
 </html>
