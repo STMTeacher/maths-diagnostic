@@ -829,7 +829,7 @@
           <div class="panel hero-card">
             <div class="kicker">Maths Diagnostic Tool</div>
             <h1>Answer 20 questions to start the diagnosis of what you do and do not know.</h1>
-            <p class="muted">The diagnostic uses your CSV file. The practice topics and subtopics are also pulled directly from the CSV, so if you edit the file later the app updates automatically.</p>
+            <p class="muted">The diagnostic uses common knowledge questions from the GCSE papers. The practice topics and subtopics are also pulled directly from my file, so I can add more later to the app automatically.</p>
             <div class="button-row">
               <button class="glass-btn" onclick="startDiagnostic()">Start Diagnostic<br><span class="mini">20 mixed questions</span></button>
               <button class="glass-btn" onclick="openPracticeTopics()">Practice<br><span class="mini">Choose a topic from the CSV</span></button>
@@ -866,7 +866,7 @@
       app.innerHTML = `
         <div class="panel content-card">
           <h2>Practice by topic</h2>
-          <p class="muted">Only topics found in the CSV file are shown here. If you later add a <strong>Subtopic</strong> column, those can also be used automatically.</p>
+          <p class="muted">Only topics found in my file are shown here. If I add more later <strong>Subtopic</strong> column, those can also be used automatically.</p>
           <div class="topic-grid">
             ${topics.map(item => {
               const subs = [...new Set(state.activeQuestions.filter(q => q.Topic === item.topic && q.Subtopic).map(q => q.Subtopic))].sort();
